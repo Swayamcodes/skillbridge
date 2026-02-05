@@ -6,7 +6,7 @@ exports.signup = async (req, res) => {
     const { email, password, fullName, college } = req.body;
 
     // Validate college email (replace with your college domain)
-    if (!email.endsWith('@youruniversity.edu')) {
+    if (!email.endsWith('@gmail.com')) {
       return res.status(400).json({ 
         success: false, 
         message: 'Please use your college email address' 
