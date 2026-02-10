@@ -1,0 +1,108 @@
+import { useState, useEffect, useContext } from 'react';
+import { Link } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
+import api from '../services/api';
+
+const Profile = () => {
+  const { profile: authProfile, logout } = useContext(AuthContext);
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const fetchProfile = async () => {
+    try {
+      const response = await api.get(`/api/profiles/${authProfile.id}`);
+      setProfile(response.data.profile);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
+
+  return (
+    <div className="min-h-screen bg-white p-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="border-4 border-black shadow-brutal p-8">
+          <div className="flex justify-between items-start mb-6">
+            <div>
+              <h1 className="text-4xl font-bold mb-2">{profile?.full_name}</h1>
+              <p className="text-lg">{profile?.college}</p>
+              <p>Year {profile?.year}</p>
+            </div>
+            <div className="flex gap-2">
+              <Link
+                to="/profile/edit"
+                className="bg-black text-white border-3 border-black px-4 py-2 font-bold hover:bg-white hover:text-black"
+              >
+                Edit Profile
+              </Link>
+              <button
+                onClick={logout}
+                className="border-3 border-black px-4 py-2 font-bold hover:bg-black hover:text-white"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+
+          <div className="mb-6">
+            <p className="font-bold mb-2">Email:</p>
+            <p>{profile?.email}</p>
+          </div>
+
+          <div className="mb-6">
+            <p className="font-bold mb-2">Credits:</p>
+            <p className="text-2xl">{profile?.credits}</p>
+          </div>
+
+          <div className="mb-6">
+            <p className="font-bold mb-2">Bio:</p>
+            <p>{profile?.bio || 'No bio added yet'}</p>
+          </div>
+
+          <div className="mb-6">
+            <p className="font-bold mb-2">Skills:</p>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {profile?.skills && profile.skills.length > 0 ? (
+                profile.skills.map((skill, index) => (
+                  <span
+                    key={index}
+                    className="border-3 border-black px-3 py-1 font-bold"
+                  >
+                    {skill}
+                  </span>
+                ))
+              ) : (
+                <p>No skills added yet</p>
+              )}
+            </div>
+          </div>
+
+          <div className="mb-6">
+            <p className="font-bold mb-2">Reputation Score:</p>
+            <p className="text-xl">{profile?.reputation_score || 0}</p>
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <Link
+            to="/"
+            className="inline-block border-3 border-black px-6 py-3 font-bold hover:bg-black hover:text-white"
+          >
+            ← Back to Home
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Profile;
