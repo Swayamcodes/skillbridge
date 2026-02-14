@@ -32,6 +32,24 @@ const Home = () => {
             >
               My Profile
             </Link>
+            <Link
+  to="/applications"
+  className="border-3 border-black px-6 py-3 font-bold hover:bg-black hover:text-white"
+>
+  My Applications
+</Link>
+<Link
+  to="/my-gigs"
+  className="border-3 border-black px-6 py-3 font-bold hover:bg-black hover:text-white"
+>
+  My Gigs
+</Link>
+<Link
+  to="/wallet"
+  className="border-3 border-black px-6 py-3 font-bold hover:bg-black hover:text-white"
+>
+  My Wallet
+</Link>
             <button
               onClick={logout}
               className="border-3 border-black px-6 py-3 font-bold hover:bg-black hover:text-white"

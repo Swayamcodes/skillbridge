@@ -8,10 +8,6 @@ export const AuthProvider = ({ children }) => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
   const checkAuth = async () => {
     const token = localStorage.getItem('token');
     if (token) {
@@ -25,6 +21,10 @@ export const AuthProvider = ({ children }) => {
     }
     setLoading(false);
   };
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
 
   const login = async (email, password) => {
     const response = await authAPI.login({ email, password });
@@ -46,8 +46,20 @@ export const AuthProvider = ({ children }) => {
     setProfile(null);
   };
 
+  const refreshProfile = async () => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const response = await authAPI.getCurrentUser();
+        setProfile(response.data.profile);
+      } catch (error) {
+        console.error('Error refreshing profile:', error);
+      }
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, profile, loading, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, profile, loading, login, signup, logout, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );

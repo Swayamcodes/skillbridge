@@ -14,6 +14,11 @@ const GigDetail = () => {
   const [applicationMessage, setApplicationMessage] = useState('');
   const [error, setError] = useState('');
 
+  const [showReviewForm, setShowReviewForm] = useState(false);
+const [rating, setRating] = useState(5);
+const [reviewComment, setReviewComment] = useState('');
+const [submittingReview, setSubmittingReview] = useState(false);
+
   useEffect(() => {
     fetchGig();
   }, [id]);
@@ -62,6 +67,38 @@ const GigDetail = () => {
       </div>
     );
   }
+  const handleComplete = async () => {
+  if (!window.confirm('Mark this gig as complete? This will release payment/credits to the freelancer.')) return;
+
+  try {
+    await api.put(`/api/gigs/${id}/complete`);
+    alert('Gig marked as complete! Payment/credits released.');
+    fetchGig();
+  } catch (error) {
+    alert(error.response?.data?.message || 'Failed to complete gig');
+  }
+};
+
+const handleSubmitReview = async (e) => {
+  e.preventDefault();
+  setSubmittingReview(true);
+
+  try {
+    await api.post(`/api/reviews`, {
+      gigId: id,
+      rating: rating,
+      comment: reviewComment
+    });
+    alert('Review submitted successfully!');
+    setShowReviewForm(false);
+    setReviewComment('');
+    setRating(5);
+  } catch (error) {
+    alert(error.response?.data?.message || 'Failed to submit review');
+  } finally {
+    setSubmittingReview(false);
+  }
+};
 
   const isCreator = gig?.creator?.id === profile?.id;
 
@@ -73,9 +110,11 @@ const GigDetail = () => {
             <div>
               <h1 className="text-4xl font-bold mb-2">{gig.title}</h1>
               <p className="text-lg">
-                Posted by{' '}
-                <span className="font-bold">{gig.creator?.full_name}</span> from {gig.creator?.college}
-              </p>
+  Posted by{' '}
+  <Link to={`/profile/${gig.creator?.id}`} className="font-bold underline">
+    {gig.creator?.full_name}
+  </Link> from {gig.creator?.college}
+</p>
             </div>
             <div>
               {gig.type === 'paid' ? (
@@ -155,12 +194,93 @@ const GigDetail = () => {
             </div>
           )}
 
+
+
+          {isCreator && gig.status === 'assigned' && (
+  <div className="border-t-4 border-black pt-6 mt-6">
+    <h2 className="text-xl font-bold mb-4">Mark as Complete</h2>
+    <p className="mb-4">Once the work is done, mark this gig as complete to release payment/credits.</p>
+    <button
+      onClick={handleComplete}
+      className="bg-black text-white border-3 border-black px-6 py-3 font-bold hover:bg-white hover:text-black"
+    >
+      Mark as Complete
+    </button>
+  </div>
+)}
+
+{gig.status === 'completed' && (isCreator || gig.assigned_to === profile?.id) && (
+  <div className="border-t-4 border-black pt-6 mt-6">
+    <h2 className="text-xl font-bold mb-4">Leave a Review</h2>
+    
+    {!showReviewForm ? (
+      <button
+        onClick={() => setShowReviewForm(true)}
+        className="bg-black text-white border-3 border-black px-6 py-3 font-bold hover:bg-white hover:text-black"
+      >
+        Write Review
+      </button>
+    ) : (
+      <form onSubmit={handleSubmitReview}>
+        <div className="mb-4">
+          <label className="block font-bold mb-2">Rating</label>
+          <div className="flex gap-2">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <button
+                key={star}
+                type="button"
+                onClick={() => setRating(star)}
+                className={`text-4xl ${star <= rating ? 'text-black' : 'text-gray-300'}`}
+              >
+                ★
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="mb-4">
+          <label className="block font-bold mb-2">Comment</label>
+          <textarea
+            value={reviewComment}
+            onChange={(e) => setReviewComment(e.target.value)}
+            placeholder="Share your experience..."
+            className="w-full border-3 border-black p-3 h-32"
+            required
+          />
+        </div>
+
+        <div className="flex gap-2">
+          <button
+            type="submit"
+            disabled={submittingReview}
+            className="bg-black text-white border-3 border-black px-6 py-3 font-bold hover:bg-white hover:text-black"
+          >
+            {submittingReview ? 'Submitting...' : 'Submit Review'}
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowReviewForm(false)}
+            className="border-3 border-black px-6 py-3 font-bold hover:bg-black hover:text-white"
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+    )}
+  </div>
+)}
+
           {isCreator && (
-            <div className="bg-yellow-100 border-3 border-black p-4">
-              <p className="font-bold">This is your gig</p>
-              <p className="text-sm">You'll receive applications from interested students</p>
-            </div>
-          )}
+  <div className="bg-yellow-100 border-3 border-black p-4">
+    <p className="font-bold mb-2">This is your gig</p>
+    <Link
+      to={`/gigs/${id}/applicants`}
+      className="inline-block bg-black text-white border-3 border-black px-6 py-3 font-bold hover:bg-white hover:text-black mt-2"
+    >
+      View Applicants
+    </Link>
+  </div>
+)}
         </div>
 
         <div className="mt-6">

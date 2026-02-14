@@ -7,21 +7,31 @@ const Profile = () => {
   const { profile: authProfile, logout } = useContext(AuthContext);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [reviews, setReviews] = useState([]);
+const [avgRating, setAvgRating] = useState(0);
+const [totalReviews, setTotalReviews] = useState(0);
 
   useEffect(() => {
     fetchProfile();
   }, []);
 
   const fetchProfile = async () => {
-    try {
-      const response = await api.get(`/api/profiles/${authProfile.id}`);
-      setProfile(response.data.profile);
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  try {
+    const [profileRes, reviewsRes] = await Promise.all([
+      api.get(`/api/profiles/${authProfile.id}`),
+      api.get(`/api/reviews/user/${authProfile.id}`)
+    ]);
+    setProfile(profileRes.data.profile);
+    setReviews(reviewsRes.data.reviews);
+    setAvgRating(reviewsRes.data.averageRating);
+    setTotalReviews(reviewsRes.data.totalReviews);
+  } catch (error) {
+    console.error('Error fetching profile:', error);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
@@ -91,6 +101,45 @@ const Profile = () => {
             <p className="text-xl">{profile?.reputation_score || 0}</p>
           </div>
         </div>
+
+        <div className="border-4 border-black shadow-brutal p-8 mt-6">
+  <h2 className="text-2xl font-bold mb-4">
+    Reviews ({totalReviews})
+    {totalReviews > 0 && (
+      <span className="ml-4 text-yellow-600">
+        {'★'.repeat(Math.round(avgRating))}{'☆'.repeat(5 - Math.round(avgRating))}
+        {' '}({avgRating})
+      </span>
+    )}
+  </h2>
+
+  {reviews.length === 0 ? (
+    <p>No reviews yet</p>
+  ) : (
+    <div className="space-y-4">
+      {reviews.map((review) => (
+        <div key={review.id} className="border-3 border-black p-4">
+          <div className="flex justify-between items-start mb-2">
+            <div>
+              <p className="font-bold">{review.reviewer?.full_name}</p>
+              <p className="text-sm">{review.reviewer?.college}</p>
+            </div>
+            <div className="text-yellow-600 text-xl">
+              {'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}
+            </div>
+          </div>
+          <p className="mb-2">{review.comment}</p>
+          <p className="text-sm text-gray-600">
+            For: {review.transaction?.gig?.title}
+          </p>
+          <p className="text-sm text-gray-500">
+            {new Date(review.created_at).toLocaleDateString()}
+          </p>
+        </div>
+      ))}
+    </div>
+  )}
+</div>
 
         <div className="mt-4">
           <Link

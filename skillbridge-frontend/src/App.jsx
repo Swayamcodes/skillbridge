@@ -10,6 +10,12 @@ import ProfileEdit from './pages/ProfileEdit';
 import Gigs from './pages/Gigs';
 import PostGig from './pages/PostGig';
 import GigDetail from './pages/GigDetail';
+import MyApplications from './pages/MyApplications';
+import GigApplicants from './pages/GigApplicants';
+import MyGigs from './pages/MyGigs';
+import Wallet from './pages/Wallet';
+import PublicProfile from './pages/PublicProfile';
+
 
 function App() {
   return (
@@ -74,6 +80,48 @@ function App() {
               </ProtectedRoute>
             } 
           />
+          <Route 
+            path="/gigs/:id/applicants" 
+            element={
+              <ProtectedRoute>
+                <GigApplicants />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/applications" 
+            element={
+              <ProtectedRoute>
+                <MyApplications />
+              </ProtectedRoute>
+            } 
+          />
+          
+
+<Route 
+  path="/my-gigs" 
+  element={
+    <ProtectedRoute>
+      <MyGigs />
+    </ProtectedRoute>
+  } 
+/>
+<Route 
+  path="/wallet" 
+  element={
+    <ProtectedRoute>
+      <Wallet />
+    </ProtectedRoute>
+  } 
+/>
+<Route 
+  path="/profile/:id" 
+  element={
+    <ProtectedRoute>
+      <PublicProfile />
+    </ProtectedRoute>
+  } 
+/>
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </BrowserRouter>
