@@ -95,115 +95,167 @@ const Gigs = () => {
     });
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-white">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-gray-600">Loading gigs...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-white p-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-4xl font-bold">Browse Gigs</h1>
-          <Link
-            to="/gigs/post"
-            className="bg-black text-white border-3 border-black px-6 py-3 font-bold hover:bg-white hover:text-black"
-          >
-            + Post Gig
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+      {/* Header/Navigation */}
+      <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+          <Link to="/" className="text-xl font-light tracking-wide">Skill bridge</Link>
+          <div className="flex items-center gap-4">
+            <Link to="/" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
+              Dashboard
+            </Link>
+            <Link
+              to="/gigs/post"
+              className="bg-emerald-700 text-white px-6 py-2 rounded-full text-sm hover:bg-emerald-800 transition-all hover:scale-105"
+            >
+              + Post Gig
+            </Link>
+          </div>
+        </div>
+      </nav>
+
+      <div className="max-w-7xl mx-auto px-6 py-12">
+        {/* Header */}
+        <div className="mb-8">
+          <Link to="/" className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors mb-4">
+            ← Back to Dashboard
           </Link>
+          <h1 className="text-4xl font-light mb-2">Browse Opportunities</h1>
+          <p className="text-gray-600">Discover gigs and connect with peers across campus</p>
         </div>
 
         {/* Search Bar */}
         <div className="mb-6">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by title, description, or skills..."
-            className="w-full border-3 border-black p-3 text-lg"
-          />
-        </div>
-
-        {/* Type Filter */}
-        <div className="flex gap-2 mb-4">
-          <button
-            onClick={() => setFilter('all')}
-            className={`border-3 border-black px-4 py-2 font-bold ${
-              filter === 'all' ? 'bg-black text-white' : 'hover:bg-black hover:text-white'
-            }`}
-          >
-            All
-          </button>
-          <button
-            onClick={() => setFilter('paid')}
-            className={`border-3 border-black px-4 py-2 font-bold ${
-              filter === 'paid' ? 'bg-black text-white' : 'hover:bg-black hover:text-white'
-            }`}
-          >
-            Paid
-          </button>
-          <button
-            onClick={() => setFilter('barter')}
-            className={`border-3 border-black px-4 py-2 font-bold ${
-              filter === 'barter' ? 'bg-black text-white' : 'hover:bg-black hover:text-white'
-            }`}
-          >
-            Barter
-          </button>
-        </div>
-
-        {/* Sort */}
-        <div className="flex gap-2 mb-4 items-center">
-          <span className="font-bold">Sort by:</span>
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="border-3 border-black px-4 py-2 font-bold"
-          >
-            <option value="newest">Newest First</option>
-            <option value="oldest">Oldest First</option>
-            <option value="price-high">Price: High to Low</option>
-            <option value="price-low">Price: Low to High</option>
-          </select>
-        </div>
-
-        {/* Skills Filter */}
-        {allSkills.length > 0 && (
-          <div className="mb-6">
-            <p className="font-bold mb-2">Filter by Skills:</p>
-            <div className="flex flex-wrap gap-2">
-              {allSkills.map((skill) => (
-                <button
-                  key={skill}
-                  onClick={() => toggleSkill(skill)}
-                  className={`border-2 border-black px-3 py-1 text-sm font-bold ${
-                    selectedSkills.includes(skill)
-                      ? 'bg-black text-white'
-                      : 'hover:bg-gray-200'
-                  }`}
-                >
-                  {skill}
-                </button>
-              ))}
-            </div>
-            {selectedSkills.length > 0 && (
-              <button
-                onClick={() => setSelectedSkills([])}
-                className="mt-2 text-sm underline font-bold"
-              >
-                Clear skill filters
-              </button>
-            )}
+          <div className="relative">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by title, description, or skills..."
+              className="w-full border border-gray-300 rounded-lg px-5 py-4 pr-12 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-lg"
+            />
+            <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-xl">🔍</span>
           </div>
-        )}
+        </div>
+
+        {/* Filters Section */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6 mb-8">
+          {/* Type Filter */}
+          <div className="mb-6">
+            <p className="text-sm font-medium text-gray-700 mb-3">Type</p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setFilter('all')}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  filter === 'all' 
+                    ? 'bg-emerald-700 text-white' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                All Gigs
+              </button>
+              <button
+                onClick={() => setFilter('paid')}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  filter === 'paid' 
+                    ? 'bg-emerald-700 text-white' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                💰 Paid
+              </button>
+              <button
+                onClick={() => setFilter('barter')}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  filter === 'barter' 
+                    ? 'bg-emerald-700 text-white' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                🔄 Barter
+              </button>
+            </div>
+          </div>
+
+          {/* Sort */}
+          <div className="mb-6">
+            <p className="text-sm font-medium text-gray-700 mb-3">Sort by</p>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            >
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+              <option value="price-high">Price: High to Low</option>
+              <option value="price-low">Price: Low to High</option>
+            </select>
+          </div>
+
+          {/* Skills Filter */}
+          {allSkills.length > 0 && (
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-sm font-medium text-gray-700">Filter by Skills</p>
+                {selectedSkills.length > 0 && (
+                  <button
+                    onClick={() => setSelectedSkills([])}
+                    className="text-sm text-emerald-700 hover:text-emerald-800 font-medium"
+                  >
+                    Clear ({selectedSkills.length})
+                  </button>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {allSkills.map((skill) => (
+                  <button
+                    key={skill}
+                    onClick={() => toggleSkill(skill)}
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+                      selectedSkills.includes(skill)
+                        ? 'bg-emerald-700 text-white'
+                        : 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
+                    }`}
+                  >
+                    {skill}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Results Count */}
-        <p className="mb-4 font-bold">
-          Showing {filteredAndSortedGigs.length} of {gigs.length} gigs
-        </p>
+        <div className="flex items-center justify-between mb-6">
+          <p className="text-gray-600">
+            <span className="font-medium text-gray-900">{filteredAndSortedGigs.length}</span> of {gigs.length} gigs
+          </p>
+        </div>
 
         {/* Gigs Grid */}
         {filteredAndSortedGigs.length === 0 ? (
-          <div className="border-4 border-black p-8 text-center">
-            <p className="text-xl mb-4">No gigs found</p>
+          <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+            <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+              <span className="text-3xl">🔍</span>
+            </div>
+            <h3 className="text-xl font-light mb-2">No gigs found</h3>
+            <p className="text-gray-600 mb-6">
+              {searchQuery || selectedSkills.length > 0 
+                ? 'Try adjusting your filters'
+                : 'Be the first to post a gig!'
+              }
+            </p>
             {searchQuery || selectedSkills.length > 0 ? (
               <button
                 onClick={() => {
@@ -211,16 +263,16 @@ const Gigs = () => {
                   setSelectedSkills([]);
                   setFilter('all');
                 }}
-                className="inline-block bg-black text-white border-3 border-black px-6 py-3 font-bold hover:bg-white hover:text-black"
+                className="bg-emerald-700 text-white px-6 py-3 rounded-full hover:bg-emerald-800 transition-all hover:scale-105"
               >
                 Clear All Filters
               </button>
             ) : (
               <Link
                 to="/gigs/post"
-                className="inline-block bg-black text-white border-3 border-black px-6 py-3 font-bold hover:bg-white hover:text-black"
+                className="inline-block bg-emerald-700 text-white px-6 py-3 rounded-full hover:bg-emerald-800 transition-all hover:scale-105"
               >
-                Post the first gig
+                Post the First Gig
               </Link>
             )}
           </div>
@@ -230,48 +282,58 @@ const Gigs = () => {
               <Link
                 key={gig.id}
                 to={`/gigs/${gig.id}`}
-                className="border-4 border-black shadow-brutal p-6 hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
+                className="bg-white rounded-xl border border-gray-200 p-6 hover:border-emerald-500 hover:shadow-lg transition-all group"
               >
-                <h3 className="text-xl font-bold mb-2">{gig.title}</h3>
-                <p className="mb-4 line-clamp-3">{gig.description}</p>
-                
-                <div className="mb-3">
+                <div className="flex items-start justify-between mb-3">
+                  <h3 className="text-xl font-medium group-hover:text-emerald-700 transition-colors line-clamp-2 flex-1">
+                    {gig.title}
+                  </h3>
                   {gig.type === 'paid' ? (
-                    <span className="bg-black text-white px-3 py-1 font-bold">
+                    <span className="bg-emerald-700 text-white px-3 py-1 rounded-full text-sm font-medium flex-shrink-0 ml-2">
                       ₹{gig.price}
                     </span>
                   ) : (
-                    <span className="border-3 border-black px-3 py-1 font-bold">
+                    <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full text-sm font-medium flex-shrink-0 ml-2">
                       {gig.credits} Credits
                     </span>
                   )}
                 </div>
 
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {gig.skills_required?.slice(0, 3).map((skill, index) => (
-                    <span
-                      key={index}
-                      className="text-sm border-2 border-black px-2 py-1"
-                    >
-                      {skill}
-                    </span>
-                  ))}
-                </div>
+                <p className="text-gray-600 text-sm mb-4 line-clamp-3 leading-relaxed">
+                  {gig.description}
+                </p>
 
-                <p className="text-sm">by {gig.creator?.full_name}</p>
+                {gig.skills_required && gig.skills_required.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {gig.skills_required.slice(0, 3).map((skill, index) => (
+                      <span
+                        key={index}
+                        className="bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full text-xs"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                    {gig.skills_required.length > 3 && (
+                      <span className="bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full text-xs">
+                        +{gig.skills_required.length - 3} more
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 text-sm font-medium">
+                      {gig.creator?.full_name?.charAt(0).toUpperCase()}
+                    </div>
+                    <span className="text-sm text-gray-600">{gig.creator?.full_name}</span>
+                  </div>
+                  <span className="text-emerald-700 group-hover:translate-x-1 transition-transform">→</span>
+                </div>
               </Link>
             ))}
           </div>
         )}
-
-        <div className="mt-8">
-          <Link
-            to="/"
-            className="inline-block border-3 border-black px-6 py-3 font-bold hover:bg-black hover:text-white"
-          >
-            ← Back to Home
-          </Link>
-        </div>
       </div>
     </div>
   );
