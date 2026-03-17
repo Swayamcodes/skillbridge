@@ -451,7 +451,7 @@ This project is developed as a final year academic project.
 
 ## 📧 Contact
 
-For queries or support, contact: [your-email@university.edu]
+For queries or support, contact: shindeswayam2004@gmail.com
 
 ---
 
