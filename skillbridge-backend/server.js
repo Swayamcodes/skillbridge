@@ -1,6 +1,21 @@
-const express = require('express');
-const cors = require('cors');
-require('dotenv').config();
+import 'dotenv/config';
+
+
+console.log('Environment check:');
+console.log('SUPABASE_URL:', process.env.SUPABASE_URL);
+console.log('SUPABASE_KEY exists:', !!process.env.SUPABASE_KEY);
+
+import express from 'express';
+import cors from 'cors';
+import authRoutes from './routes/auth.js';
+import profileRoutes from './routes/profile.js';
+import gigRoutes from './routes/gig.js';
+import applicationRoutes from './routes/application.js';
+import paymentRoutes from './routes/payment.js';
+import walletRoutes from './routes/wallet.js';
+import reviewRoutes from './routes/review.js';
+
+
 
 const app = express();
 
@@ -8,14 +23,6 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-
-const authRoutes = require('./routes/auth');
-const profileRoutes = require('./routes/profile');
-const gigRoutes = require('./routes/gig');
-const applicationRoutes = require('./routes/application');
-const paymentRoutes = require('./routes/payment');
-const walletRoutes = require('./routes/wallet');
-const reviewRoutes = require('./routes/review');
 
 app.get('/', (req, res) => {
   res.json({ message: 'SkillBridge API is running' });

@@ -1,6 +1,6 @@
-const supabase = require('../utils/supabase');
+import supabase from '../utils/supabase.js';
 
-exports.createReview = async (req, res) => {
+export const createReview = async (req, res) => {
   try {
     const { gigId, rating, comment } = req.body;
     const userId = req.user.id;
@@ -88,7 +88,7 @@ exports.createReview = async (req, res) => {
   }
 };
 
-exports.getUserReviews = async (req, res) => {
+export const getUserReviews = async (req, res) => {
   try {
     const { userId } = req.params;
 

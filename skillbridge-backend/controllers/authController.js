@@ -1,7 +1,7 @@
-const supabase = require('../utils/supabase');
+import supabase from '../utils/supabase.js';
 
 // Signup
-exports.signup = async (req, res) => {
+export const signup = async (req, res) => {
   try {
     const { email, password, fullName, college } = req.body;
 
@@ -48,7 +48,7 @@ exports.signup = async (req, res) => {
 };
 
 // Login
-exports.login = async (req, res) => {
+export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -80,7 +80,7 @@ exports.login = async (req, res) => {
 };
 
 // Logout
-exports.logout = async (req, res) => {
+export const logout = async (req, res) => {
   try {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
@@ -92,7 +92,7 @@ exports.logout = async (req, res) => {
 };
 
 // Get current user
-exports.getCurrentUser = async (req, res) => {
+export const getCurrentUser = async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader) {

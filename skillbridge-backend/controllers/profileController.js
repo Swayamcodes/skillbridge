@@ -1,6 +1,6 @@
-const supabase = require('../utils/supabase');
+import supabase from '../utils/supabase.js';
 
-exports.getProfile = async (req, res) => {
+export const getProfile = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -18,7 +18,7 @@ exports.getProfile = async (req, res) => {
   }
 };
 
-exports.updateProfile = async (req, res) => {
+export const updateProfile = async (req, res) => {
   try {
     const { id } = req.params;
     const { skills, bio, year } = req.body;

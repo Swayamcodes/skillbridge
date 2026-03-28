@@ -1,9 +1,9 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const reviewController = require('../controllers/reviewController');
-const { requireAuth } = require('../middleware/authMiddleware');
+import * as reviewController from '../controllers/reviewController.js';
+import { requireAuth } from '../middleware/authMiddleware.js';
 
 router.post('/', requireAuth, reviewController.createReview);
 router.get('/user/:userId', reviewController.getUserReviews);
 
-module.exports = router;
+export default router;

@@ -1,6 +1,6 @@
-const supabase = require('../utils/supabase');
+import supabase from '../utils/supabase.js';
 
-exports.getTransactions = async (req, res) => {
+export const getTransactions = async (req, res) => {
   try {
     const userId = req.user.id;
 
@@ -28,7 +28,7 @@ exports.getTransactions = async (req, res) => {
   }
 };
 
-exports.getCreditsHistory = async (req, res) => {
+export const getCreditsHistory = async (req, res) => {
   try {
     const userId = req.user.id;
 

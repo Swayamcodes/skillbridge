@@ -1,9 +1,9 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const walletController = require('../controllers/walletController');
-const { requireAuth } = require('../middleware/authMiddleware');
+import * as walletController from '../controllers/walletController.js';
+import { requireAuth } from '../middleware/authMiddleware.js';
 
 router.get('/transactions', requireAuth, walletController.getTransactions);
 router.get('/credits-history', requireAuth, walletController.getCreditsHistory);
 
-module.exports = router;
+export default router;

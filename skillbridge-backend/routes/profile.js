@@ -1,9 +1,9 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const profileController = require('../controllers/profileController.js');
-const { requireAuth } = require('../middleware/authMiddleware.js');
+import * as profileController from '../controllers/profileController.js';
+import { requireAuth } from '../middleware/authMiddleware.js';
 
 router.get('/:id', profileController.getProfile);
 router.put('/:id', requireAuth, profileController.updateProfile);
 
-module.exports = router;
+export default router;

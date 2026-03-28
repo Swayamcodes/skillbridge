@@ -1,13 +1,13 @@
-const Razorpay = require('razorpay');
-const supabase = require('../utils/supabase');
-const crypto = require('crypto');
+import Razorpay from 'razorpay';
+import supabase from '../utils/supabase.js';
+import crypto from 'crypto';
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
-exports.createOrder = async (req, res) => {
+export const createOrder = async (req, res) => {
   try {
     const { gigId } = req.body;
     const userId = req.user.id;
@@ -60,7 +60,7 @@ exports.createOrder = async (req, res) => {
   }
 };
 
-exports.verifyPayment = async (req, res) => {
+export const verifyPayment = async (req, res) => {
   try {
     const { 
       razorpay_order_id, 
@@ -71,7 +71,6 @@ exports.verifyPayment = async (req, res) => {
     } = req.body;
 
     // Verify signature
-    const crypto = require('crypto');
     const hmac = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET);
     hmac.update(razorpay_order_id + '|' + razorpay_payment_id);
     const generated_signature = hmac.digest('hex');

@@ -1,6 +1,6 @@
-const supabase = require('../utils/supabase');
+import supabase from '../utils/supabase.js';
 
-exports.getMyApplications = async (req, res) => {
+export const getMyApplications = async (req, res) => {
   try {
     const userId = req.user.id;
 
@@ -27,7 +27,7 @@ exports.getMyApplications = async (req, res) => {
   }
 };
 
-exports.getGigApplicants = async (req, res) => {
+export const getGigApplicants = async (req, res) => {
   try {
     const { gigId } = req.params;
     const userId = req.user.id;
@@ -66,7 +66,7 @@ exports.getGigApplicants = async (req, res) => {
   }
 };
 
-exports.acceptApplication = async (req, res) => {
+export const acceptApplication = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
@@ -185,7 +185,7 @@ console.log('Transaction created:', transaction);
     res.status(500).json({ success: false, message: error.message });
   }
 };
-exports.rejectApplication = async (req, res) => {
+export const rejectApplication = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;

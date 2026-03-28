@@ -1,6 +1,6 @@
-const supabase = require('../utils/supabase');
+import supabase from '../utils/supabase.js';
 
-exports.createGig = async (req, res) => {
+export const createGig = async (req, res) => {
   try {
     const { title, description, type, price, credits, skillsRequired, deadline } = req.body;
     const userId = req.user.id;
@@ -45,7 +45,7 @@ exports.createGig = async (req, res) => {
   }
 };
 
-exports.getAllGigs = async (req, res) => {
+export const getAllGigs = async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('gigs')
@@ -64,7 +64,7 @@ exports.getAllGigs = async (req, res) => {
   }
 };
 
-exports.getGigById = async (req, res) => {
+export const getGigById = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -85,7 +85,7 @@ exports.getGigById = async (req, res) => {
   }
 };
 
-exports.applyToGig = async (req, res) => {
+export const applyToGig = async (req, res) => {
   try {
     const { id } = req.params;
     const { message } = req.body;
@@ -149,7 +149,7 @@ exports.applyToGig = async (req, res) => {
   }
 };
 
-exports.getGigApplicants = async (req, res) => {
+export const getGigApplicants = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
@@ -187,7 +187,7 @@ exports.getGigApplicants = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-exports.getMyPostedGigs = async (req, res) => {
+export const getMyPostedGigs = async (req, res) => {
   try {
     const userId = req.user.id;
 
@@ -214,7 +214,7 @@ exports.getMyPostedGigs = async (req, res) => {
   }
 };
 
-exports.getMyAssignedGigs = async (req, res) => {
+export const getMyAssignedGigs = async (req, res) => {
   try {
     const userId = req.user.id;
 
@@ -241,7 +241,7 @@ exports.getMyAssignedGigs = async (req, res) => {
   }
 };
 
-exports.completeGig = async (req, res) => {
+export const completeGig = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
