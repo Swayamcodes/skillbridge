@@ -82,7 +82,14 @@ export const login = async (req, res) => {
 // Logout
 export const logout = async (req, res) => {
   try {
-    const { error } = await supabase.auth.signOut();
+    const token = req.headers.authorization?.replace('Bearer ', '');
+
+    if (!token) {
+      return res.status(401).json({ success: false, message: 'No token provided' });
+    }
+
+    // Revoke the caller's active auth token on the auth server.
+    const { error } = await supabase.auth.admin.signOut(token);
     if (error) throw error;
 
     res.json({ success: true, message: 'Logged out successfully' });

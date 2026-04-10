@@ -1,9 +1,35 @@
-import { useContext } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import api from '../services/api';
 
 const Home = () => {
   const { profile, logout } = useContext(AuthContext);
+  const [recommendations, setRecommendations] = useState([]);
+  const [loadingRecs, setLoadingRecs] = useState(false);
+
+  useEffect(() => {
+    fetchRecommendations();
+  }, []);
+
+  const fetchRecommendations = async () => {
+    setLoadingRecs(true);
+
+    try {
+      const response = await api.get('/api/ml/recommended');
+      setRecommendations(Array.isArray(response.data?.recommendations) ? response.data.recommendations : []);
+    } catch (error) {
+      console.error('Error fetching recommendations:', error);
+      setRecommendations([]);
+    } finally {
+      setLoadingRecs(false);
+    }
+  };
+
+  const truncateText = (text, maxLength = 140) => {
+    if (!text) return 'No description available.';
+    return text.length > maxLength ? `${text.slice(0, maxLength).trim()}...` : text;
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
@@ -32,6 +58,95 @@ const Home = () => {
             Welcome back, <span className="text-emerald-700">{profile?.full_name}</span>
           </h2>
           <p className="text-gray-600">{profile?.email}</p>
+        </div>
+
+        <div className="mb-12">
+          <div className="flex items-center justify-between gap-4 mb-6">
+            <div>
+              <h3 className="text-2xl font-light flex items-center gap-3">
+                <span className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-lg">
+                  AI
+                </span>
+                Recommended For You
+              </h3>
+              <p className="text-sm text-gray-600 mt-2">
+                Personalized gig suggestions based on the skills in your profile.
+              </p>
+            </div>
+            <Link
+              to="/profile"
+              className="hidden sm:inline-block text-sm text-emerald-700 hover:text-emerald-800 transition-colors"
+            >
+              Update skills →
+            </Link>
+          </div>
+
+          {loadingRecs ? (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              {[1, 2, 3].map((item) => (
+                <div
+                  key={item}
+                  className="bg-white rounded-xl border border-gray-200 p-6 animate-pulse"
+                >
+                  <div className="flex items-center justify-between mb-5">
+                    <div className="h-6 w-24 rounded-full bg-emerald-100"></div>
+                    <div className="h-8 w-14 rounded-full bg-gray-100"></div>
+                  </div>
+                  <div className="h-6 w-3/4 bg-gray-200 rounded mb-4"></div>
+                  <div className="space-y-2 mb-6">
+                    <div className="h-4 w-full bg-gray-100 rounded"></div>
+                    <div className="h-4 w-5/6 bg-gray-100 rounded"></div>
+                    <div className="h-4 w-2/3 bg-gray-100 rounded"></div>
+                  </div>
+                  <div className="h-10 w-24 rounded-full bg-gray-200"></div>
+                </div>
+              ))}
+            </div>
+          ) : recommendations.length === 0 ? (
+            <div className="bg-white rounded-2xl border border-dashed border-gray-300 p-8 text-center">
+              <div className="w-14 h-14 mx-auto rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-lg mb-4">
+                AI
+              </div>
+              <h4 className="text-lg font-medium mb-2">No recommendations yet</h4>
+              <p className="text-gray-600 mb-5">
+                Complete your profile with skills to see recommendations
+              </p>
+              <Link
+                to="/profile"
+                className="inline-block bg-emerald-700 text-white px-6 py-2 rounded-full text-sm hover:bg-emerald-800 transition-colors"
+              >
+                Update Profile
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              {recommendations.map((gig) => (
+                <div
+                  key={gig.id}
+                  className="bg-white rounded-xl border border-gray-200 p-6 hover:border-emerald-500 hover:shadow-lg transition-all"
+                >
+                  <div className="flex items-start justify-between gap-4 mb-4">
+                    <span className="inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 px-3 py-1 text-xs font-medium uppercase tracking-wide">
+                      {Math.round((gig.match_score || 0) * 100)}% Match
+                    </span>
+                    <span className="text-xs text-gray-400 uppercase tracking-wide">AI</span>
+                  </div>
+
+                  <h4 className="text-lg font-medium mb-3 text-gray-900">{gig.title}</h4>
+                  <p className="text-sm text-gray-600 leading-6 mb-6">
+                    {truncateText(gig.description)}
+                  </p>
+
+                  <Link
+                    to={`/gigs/${gig.id}`}
+                    className="inline-block bg-gray-900 text-white px-5 py-2 rounded-full text-sm hover:bg-emerald-700 transition-colors"
+                  >
+                    View
+                  </Link>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Credits Card */}

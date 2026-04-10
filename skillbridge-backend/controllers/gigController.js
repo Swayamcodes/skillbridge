@@ -1,15 +1,56 @@
+import axios from 'axios';
 import supabase from '../utils/supabase.js';
+import { checkFraudRules } from './fraudController.js';
+
+const MODERATION_SERVICE_URL = 'http://localhost:5001/api/moderate';
+
+const moderateContent = async (text) => {
+  if (!text || !String(text).trim()) {
+    return { is_safe: true, flagged_words: [] };
+  }
+
+  try {
+    const response = await axios.post(
+      MODERATION_SERVICE_URL,
+      { text },
+      { timeout: 10000 }
+    );
+
+    return {
+      is_safe: response.data?.is_safe !== false,
+      flagged_words: Array.isArray(response.data?.flagged_words) ? response.data.flagged_words : []
+    };
+  } catch (error) {
+    console.error('Moderation service unavailable, allowing request:', error.message);
+    return { is_safe: true, flagged_words: [] };
+  }
+};
 
 export const createGig = async (req, res) => {
   try {
     const { title, description, type, price, credits, skillsRequired, deadline } = req.body;
     const userId = req.user.id;
 
-    const { data: profile } = await supabase
+    try {
+      const moderationResult = await moderateContent(`${title || ''} ${description || ''}`);
+      if (!moderationResult.is_safe) {
+        return res.status(400).json({
+          success: false,
+          message: 'Content contains inappropriate language',
+          flagged_words: moderationResult.flagged_words
+        });
+      }
+    } catch (error) {
+      console.error('Moderation pre-check failed, continuing with gig creation:', error.message);
+    }
+
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('id')
       .eq('user_id', userId)
       .single();
+
+    if (profileError) throw profileError;
 
     if (!profile) {
       return res.status(404).json({ success: false, message: 'Profile not found' });
@@ -90,6 +131,15 @@ export const applyToGig = async (req, res) => {
     const { id } = req.params;
     const { message } = req.body;
     const userId = req.user.id;
+
+    const moderationResult = await moderateContent(message);
+    if (!moderationResult.is_safe) {
+      return res.status(400).json({
+        success: false,
+        message: 'Application message contains inappropriate language',
+        flagged_words: moderationResult.flagged_words
+      });
+    }
 
     const { data: profile } = await supabase
       .from('profiles')
@@ -242,6 +292,19 @@ export const getMyAssignedGigs = async (req, res) => {
 };
 
 export const completeGig = async (req, res) => {
+  const rollbackState = {
+    transactionId: null,
+    gigId: null,
+    freelancerId: null,
+    freelancerCreditUpdated: false,
+    originalFreelancerCredits: null,
+    freelancerWalletUpdated: false,
+    originalWalletBalance: null,
+    creditLedgerId: null,
+    transactionCompleted: false,
+    gigCompleted: false
+  };
+
   try {
     const { id } = req.params;
     const userId = req.user.id;
@@ -283,24 +346,33 @@ export const completeGig = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Transaction not found' });
     }
 
+    rollbackState.transactionId = transaction.id;
+    rollbackState.gigId = id;
+    rollbackState.freelancerId = transaction.freelancer_id;
+
     // Release payment/credits
     if (transaction.type === 'barter') {
       // Add credits to freelancer
-      const { data: freelancer } = await supabase
+      const { data: freelancer, error: freelancerError } = await supabase
         .from('profiles')
         .select('credits')
         .eq('id', transaction.freelancer_id)
         .single();
+      if (freelancerError) throw freelancerError;
 
-      await supabase
+      rollbackState.originalFreelancerCredits = freelancer.credits;
+
+      const { error: updateCreditsError } = await supabase
         .from('profiles')
         .update({
           credits: freelancer.credits + transaction.credits
         })
         .eq('id', transaction.freelancer_id);
+      if (updateCreditsError) throw updateCreditsError;
+      rollbackState.freelancerCreditUpdated = true;
 
       // Log credit transaction
-      await supabase
+      const { data: creditLedger, error: creditLedgerError } = await supabase
         .from('credits_ledger')
         .insert([{
           from_user: transaction.creator_id,
@@ -308,44 +380,123 @@ export const completeGig = async (req, res) => {
           gig_id: id,
           amount: transaction.credits,
           type: 'earned'
-        }]);
+        }])
+        .select('id')
+        .single();
+      if (creditLedgerError) throw creditLedgerError;
+      rollbackState.creditLedgerId = creditLedger.id;
     } else {
       // For paid gigs, add to freelancer's wallet balance
-      const { data: freelancer } = await supabase
+      const { data: freelancer, error: freelancerError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', transaction.freelancer_id)
         .single();
+      if (freelancerError) throw freelancerError;
 
       // Add wallet_balance column value (we'll create this column)
       const currentBalance = freelancer.wallet_balance || 0;
+      rollbackState.originalWalletBalance = currentBalance;
       
-      await supabase
+      const { error: walletUpdateError } = await supabase
         .from('profiles')
         .update({
           wallet_balance: currentBalance + transaction.amount
         })
         .eq('id', transaction.freelancer_id);
+      if (walletUpdateError) throw walletUpdateError;
+      rollbackState.freelancerWalletUpdated = true;
+    }
+
+    try {
+      const creatorFraudResult = await checkFraudRules(transaction.creator_id);
+      if (creatorFraudResult.is_flagged) {
+        console.warn('Fraud check flagged gig creator after completion:', {
+          creator_id: transaction.creator_id,
+          reasons: creatorFraudResult.reasons
+        });
+      }
+    } catch (fraudError) {
+      console.error('Fraud check failed for gig creator after completion:', fraudError.message);
+    }
+
+    try {
+      const freelancerFraudResult = await checkFraudRules(transaction.freelancer_id);
+      if (freelancerFraudResult.is_flagged) {
+        console.warn('Fraud check flagged freelancer after completion:', {
+          freelancer_id: transaction.freelancer_id,
+          reasons: freelancerFraudResult.reasons
+        });
+      }
+    } catch (fraudError) {
+      console.error('Fraud check failed for freelancer after completion:', fraudError.message);
     }
 
     // Update transaction status
-    await supabase
+    const { error: transactionUpdateError } = await supabase
       .from('transactions')
       .update({
         status: 'completed',
         completed_at: new Date().toISOString()
       })
       .eq('id', transaction.id);
+    if (transactionUpdateError) throw transactionUpdateError;
+    rollbackState.transactionCompleted = true;
 
     // Update gig status
-    await supabase
+    const { error: gigUpdateError } = await supabase
       .from('gigs')
       .update({ status: 'completed' })
       .eq('id', id);
+    if (gigUpdateError) throw gigUpdateError;
+    rollbackState.gigCompleted = true;
 
     res.json({ success: true, message: 'Gig completed successfully' });
   } catch (error) {
     console.error('Complete gig error:', error);
-    res.status(500).json({ success: false, message: error.message });
+
+    try {
+      if (rollbackState.gigCompleted && rollbackState.gigId) {
+        await supabase
+          .from('gigs')
+          .update({ status: 'assigned' })
+          .eq('id', rollbackState.gigId);
+      }
+
+      if (rollbackState.transactionCompleted && rollbackState.transactionId) {
+        await supabase
+          .from('transactions')
+          .update({ status: 'escrow', completed_at: null })
+          .eq('id', rollbackState.transactionId);
+      }
+
+      if (rollbackState.creditLedgerId) {
+        await supabase
+          .from('credits_ledger')
+          .delete()
+          .eq('id', rollbackState.creditLedgerId);
+      }
+
+      if (rollbackState.freelancerCreditUpdated && rollbackState.freelancerId) {
+        await supabase
+          .from('profiles')
+          .update({ credits: rollbackState.originalFreelancerCredits })
+          .eq('id', rollbackState.freelancerId);
+      }
+
+      if (rollbackState.freelancerWalletUpdated && rollbackState.freelancerId) {
+        await supabase
+          .from('profiles')
+          .update({ wallet_balance: rollbackState.originalWalletBalance })
+          .eq('id', rollbackState.freelancerId);
+      }
+    } catch (rollbackError) {
+      console.error('Complete gig rollback error:', rollbackError);
+    }
+
+    res.status(500).json({
+      success: false,
+      message: 'Failed to complete gig safely. No changes were finalized.'
+    });
   }
 };

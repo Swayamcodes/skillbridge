@@ -1,4 +1,5 @@
 import supabase from '../utils/supabase.js';
+import { checkFraudRules } from './fraudController.js';
 
 export const getMyApplications = async (req, res) => {
   try {
@@ -67,6 +68,19 @@ export const getGigApplicants = async (req, res) => {
 };
 
 export const acceptApplication = async (req, res) => {
+  const rollbackState = {
+    gigId: null,
+    applicationId: null,
+    creatorId: null,
+    creditsDeducted: false,
+    originalCredits: null,
+    creditLedgerId: null,
+    transactionId: null,
+    applicationAccepted: false,
+    gigAssigned: false,
+    otherApplicationsRejected: false
+  };
+
   try {
     const { id } = req.params;
     const userId = req.user.id;
@@ -95,13 +109,23 @@ export const acceptApplication = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
 
+    if (application.status !== 'pending') {
+      return res.status(400).json({ success: false, message: 'Application is no longer pending' });
+    }
+
+    rollbackState.gigId = application.gig.id;
+    rollbackState.applicationId = id;
+    rollbackState.creatorId = application.gig.creator_id;
+
     // If barter, check creator has enough credits
     if (application.gig.type === 'barter') {
-      const { data: creatorProfile } = await supabase
+      const { data: creatorProfile, error: creatorProfileError } = await supabase
         .from('profiles')
         .select('credits')
         .eq('id', application.gig.creator_id)
         .single();
+
+      if (creatorProfileError) throw creatorProfileError;
 
       if (creatorProfile.credits < application.gig.credits) {
         return res.status(400).json({ 
@@ -110,16 +134,20 @@ export const acceptApplication = async (req, res) => {
         });
       }
 
+      rollbackState.originalCredits = creatorProfile.credits;
+
       // Deduct credits from creator (lock in escrow)
-      await supabase
+      const { error: deductCreditsError } = await supabase
         .from('profiles')
         .update({ 
           credits: creatorProfile.credits - application.gig.credits 
         })
         .eq('id', application.gig.creator_id);
+      if (deductCreditsError) throw deductCreditsError;
+      rollbackState.creditsDeducted = true;
 
       // Log credit transaction
-      await supabase
+      const { data: creditLedger, error: creditLedgerError } = await supabase
         .from('credits_ledger')
         .insert([{
           from_user: application.gig.creator_id,
@@ -127,7 +155,23 @@ export const acceptApplication = async (req, res) => {
           gig_id: application.gig.id,
           amount: application.gig.credits,
           type: 'spent'
-        }]);
+        }])
+        .select('id')
+        .single();
+      if (creditLedgerError) throw creditLedgerError;
+      rollbackState.creditLedgerId = creditLedger.id;
+
+      try {
+        const fraudResult = await checkFraudRules(application.applicant_id);
+        if (fraudResult.is_flagged) {
+          console.warn('Fraud check flagged accepted barter applicant:', {
+            applicant_id: application.applicant_id,
+            reasons: fraudResult.reasons
+          });
+        }
+      } catch (fraudError) {
+        console.error('Fraud check failed after barter credit deduction:', fraudError.message);
+      }
     }
 
     // Create transaction record
@@ -146,45 +190,104 @@ export const acceptApplication = async (req, res) => {
     }
 
     const { data: transaction, error: transactionError } = await supabase
-  .from('transactions')
-  .insert([transactionData])
-  .select()
-  .single();
+      .from('transactions')
+      .insert([transactionData])
+      .select()
+      .single();
 
-if (transactionError) {
-  console.error('Transaction error:', transactionError);
-  throw transactionError;
-}
+    if (transactionError) {
+      console.error('Transaction error:', transactionError);
+      throw transactionError;
+    }
 
-console.log('Transaction created:', transaction);
+    rollbackState.transactionId = transaction.id;
 
     // Update application status
-    await supabase
+    const { error: applicationUpdateError } = await supabase
       .from('applications')
       .update({ status: 'accepted' })
       .eq('id', id);
+    if (applicationUpdateError) throw applicationUpdateError;
+    rollbackState.applicationAccepted = true;
 
     // Update gig status and assign
-    await supabase
+    const { error: gigUpdateError } = await supabase
       .from('gigs')
       .update({
         status: 'assigned',
         assigned_to: application.applicant_id
       })
       .eq('id', application.gig.id);
+    if (gigUpdateError) throw gigUpdateError;
+    rollbackState.gigAssigned = true;
 
     // Reject all other applications
-    await supabase
+    const { error: rejectOthersError } = await supabase
       .from('applications')
       .update({ status: 'rejected' })
       .eq('gig_id', application.gig.id)
       .neq('id', id);
+    if (rejectOthersError) throw rejectOthersError;
+    rollbackState.otherApplicationsRejected = true;
 
     res.json({ success: true, message: 'Application accepted and transaction created' });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error('Accept application error:', error);
+
+    try {
+      if (rollbackState.otherApplicationsRejected && rollbackState.gigId) {
+        await supabase
+          .from('applications')
+          .update({ status: 'pending' })
+          .eq('gig_id', rollbackState.gigId)
+          .neq('id', rollbackState.applicationId);
+      }
+
+      if (rollbackState.gigAssigned && rollbackState.gigId) {
+        await supabase
+          .from('gigs')
+          .update({ status: 'open', assigned_to: null })
+          .eq('id', rollbackState.gigId);
+      }
+
+      if (rollbackState.applicationAccepted && rollbackState.applicationId) {
+        await supabase
+          .from('applications')
+          .update({ status: 'pending' })
+          .eq('id', rollbackState.applicationId);
+      }
+
+      if (rollbackState.transactionId) {
+        await supabase
+          .from('transactions')
+          .delete()
+          .eq('id', rollbackState.transactionId);
+      }
+
+      if (rollbackState.creditLedgerId) {
+        await supabase
+          .from('credits_ledger')
+          .delete()
+          .eq('id', rollbackState.creditLedgerId);
+      }
+
+      if (rollbackState.creditsDeducted && rollbackState.creatorId) {
+        await supabase
+          .from('profiles')
+          .update({ credits: rollbackState.originalCredits })
+          .eq('id', rollbackState.creatorId);
+      }
+    } catch (rollbackError) {
+      console.error('Accept application rollback error:', rollbackError);
+    }
+
+    res.status(500).json({
+      success: false,
+      message: 'Failed to accept application safely. No changes were finalized.'
+    });
   }
 };
+
 export const rejectApplication = async (req, res) => {
   try {
     const { id } = req.params;
