@@ -1,6 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import { ProfileSkeleton } from '../components/Skeletons';
 import api from '../services/api';
 
 const Profile = () => {
@@ -34,10 +35,33 @@ const Profile = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-white">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-gray-600">Loading profile...</p>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+        <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
+          <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <Link to="/" className="text-xl font-light tracking-wide">Skill bridge</Link>
+            <div className="flex items-center gap-4">
+              <Link to="/" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
+                Dashboard
+              </Link>
+              <button
+                onClick={logout}
+                className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </nav>
+
+        <div className="max-w-5xl mx-auto px-6 py-12">
+          <Link
+            to="/"
+            className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors mb-6"
+          >
+            â† Back to Dashboard
+          </Link>
+
+          <ProfileSkeleton className="bg-white shadow-lg mb-8" />
         </div>
       </div>
     );

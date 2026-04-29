@@ -1,6 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import { TableRowSkeleton } from '../components/Skeletons';
 import api from '../services/api';
 
 const Wallet = () => {
@@ -30,10 +31,87 @@ const Wallet = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-white">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-gray-600">Loading wallet...</p>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+        <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
+          <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <Link to="/" className="text-xl font-light tracking-wide">Skill bridge</Link>
+            <div className="flex items-center gap-4">
+              <Link to="/gigs" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
+                Browse Gigs
+              </Link>
+              <Link to="/" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
+                Dashboard
+              </Link>
+            </div>
+          </div>
+        </nav>
+
+        <div className="max-w-6xl mx-auto px-6 py-12">
+          <div className="mb-8">
+            <Link to="/" className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors mb-4">
+              â† Back to Dashboard
+            </Link>
+            <h1 className="text-4xl font-light mb-2">My Wallet</h1>
+            <p className="text-gray-600">Track your earnings and credit balance</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+            <div className="bg-gradient-to-br from-emerald-600 to-emerald-800 rounded-2xl p-8 text-white relative overflow-hidden">
+              <div className="absolute inset-0 opacity-10">
+                <div className="absolute inset-0" style={{
+                  backgroundImage: `linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+                                linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px)`,
+                  backgroundSize: '50px 50px'
+                }}></div>
+              </div>
+              <div className="relative z-10">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-2xl">ðŸ’°</span>
+                  <h2 className="text-lg font-light">Wallet Balance</h2>
+                </div>
+                <p className="text-5xl font-light mb-3">â‚¹{profile?.wallet_balance || 0}</p>
+                <p className="text-emerald-100 text-sm">Available for withdrawal</p>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl p-8 border-2 border-emerald-200 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-full -mr-16 -mt-16"></div>
+              <div className="relative z-10">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-2xl">ðŸ”„</span>
+                  <h2 className="text-lg font-medium text-gray-900">Credits Balance</h2>
+                </div>
+                <p className="text-5xl font-light text-emerald-700 mb-3">{profile?.credits || 0}</p>
+                <p className="text-gray-600 text-sm">Use for barter gigs</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-light">Payment History</h2>
+                <span className="text-sm text-gray-500">Loading...</span>
+              </div>
+              <div className="space-y-3">
+                {Array.from({ length: 3 }).map((_, index) => (
+                  <TableRowSkeleton key={`payment-${index}`} className="bg-white" />
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-light">Credits History</h2>
+                <span className="text-sm text-gray-500">Loading...</span>
+              </div>
+              <div className="space-y-3">
+                {Array.from({ length: 3 }).map((_, index) => (
+                  <TableRowSkeleton key={`credits-${index}`} className="bg-white" />
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );

@@ -1,6 +1,7 @@
 import { useContext, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import { GigCardSkeleton } from '../components/Skeletons';
 import api from '../services/api';
 
 const Home = () => {
@@ -84,22 +85,7 @@ const Home = () => {
           {loadingRecs ? (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               {[1, 2, 3].map((item) => (
-                <div
-                  key={item}
-                  className="bg-white rounded-xl border border-gray-200 p-6 animate-pulse"
-                >
-                  <div className="flex items-center justify-between mb-5">
-                    <div className="h-6 w-24 rounded-full bg-emerald-100"></div>
-                    <div className="h-8 w-14 rounded-full bg-gray-100"></div>
-                  </div>
-                  <div className="h-6 w-3/4 bg-gray-200 rounded mb-4"></div>
-                  <div className="space-y-2 mb-6">
-                    <div className="h-4 w-full bg-gray-100 rounded"></div>
-                    <div className="h-4 w-5/6 bg-gray-100 rounded"></div>
-                    <div className="h-4 w-2/3 bg-gray-100 rounded"></div>
-                  </div>
-                  <div className="h-10 w-24 rounded-full bg-gray-200"></div>
-                </div>
+                <GigCardSkeleton key={item} className="bg-white" />
               ))}
             </div>
           ) : recommendations.length === 0 ? (

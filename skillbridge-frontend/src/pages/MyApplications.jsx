@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { GigCardSkeleton } from '../components/Skeletons';
 import api from '../services/api';
 
 const MyApplications = () => {
@@ -38,10 +39,54 @@ const MyApplications = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-white">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-gray-600">Loading applications...</p>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+        <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
+          <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <Link to="/" className="text-xl font-light tracking-wide">Skill bridge</Link>
+            <div className="flex items-center gap-4">
+              <Link to="/gigs" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
+                Browse Gigs
+              </Link>
+              <Link to="/" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
+                Dashboard
+              </Link>
+            </div>
+          </div>
+        </nav>
+
+        <div className="max-w-6xl mx-auto px-6 py-12">
+          <div className="mb-8">
+            <Link to="/" className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors mb-4">
+              â† Back to Dashboard
+            </Link>
+            <h1 className="text-4xl font-light mb-2">My Applications</h1>
+            <p className="text-gray-600">Track your submitted proposals and their status</p>
+          </div>
+
+          <div className="bg-white rounded-xl border border-gray-200 p-6 mb-8">
+            <p className="text-sm font-medium text-gray-700 mb-3">Filter by Status</p>
+            <div className="flex flex-wrap gap-2">
+              <button className="px-4 py-2 rounded-full text-sm font-medium transition-all bg-emerald-700 text-white">
+                All Applications
+              </button>
+              <button className="px-4 py-2 rounded-full text-sm font-medium transition-all bg-gray-100 text-gray-700 hover:bg-gray-200">
+                â³ Pending
+              </button>
+              <button className="px-4 py-2 rounded-full text-sm font-medium transition-all bg-gray-100 text-gray-700 hover:bg-gray-200">
+                âœ“ Accepted
+              </button>
+              <button className="px-4 py-2 rounded-full text-sm font-medium transition-all bg-gray-100 text-gray-700 hover:bg-gray-200">
+                âœ• Rejected
+              </button>
+            </div>
+            <div className="mt-4 text-sm text-gray-600">Loading applications...</div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <GigCardSkeleton key={index} className="bg-white" />
+            ))}
+          </div>
         </div>
       </div>
     );
