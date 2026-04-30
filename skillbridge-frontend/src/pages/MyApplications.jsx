@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import Pagination from '../components/Pagination';
 import { GigCardSkeleton } from '../components/Skeletons';
 import api from '../services/api';
 
@@ -7,20 +8,33 @@ const MyApplications = () => {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     fetchApplications();
   }, []);
 
-  const fetchApplications = async () => {
+  const fetchApplications = async (page = 1) => {
     try {
-      const response = await api.get(`/api/applications/my-applications`);
+      const response = await api.get(`/api/applications/my-applications?page=${page}&limit=12`);
       setApplications(response.data.applications);
+      setTotalPages(response.data.pagination?.totalPages || 1);
     } catch (error) {
       console.error('Error fetching applications:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    fetchApplications(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleFilterChange = (status) => {
+    setFilter(status);
   };
 
   const filteredApplications = applications.filter(app => {
@@ -124,7 +138,7 @@ const MyApplications = () => {
           <p className="text-sm font-medium text-gray-700 mb-3">Filter by Status</p>
           <div className="flex flex-wrap gap-2">
             <button
-              onClick={() => setFilter('all')}
+              onClick={() => handleFilterChange('all')}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                 filter === 'all' 
                   ? 'bg-emerald-700 text-white' 
@@ -134,7 +148,7 @@ const MyApplications = () => {
               All Applications
             </button>
             <button
-              onClick={() => setFilter('pending')}
+              onClick={() => handleFilterChange('pending')}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                 filter === 'pending' 
                   ? 'bg-emerald-700 text-white' 
@@ -144,7 +158,7 @@ const MyApplications = () => {
               ⏳ Pending
             </button>
             <button
-              onClick={() => setFilter('accepted')}
+              onClick={() => handleFilterChange('accepted')}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                 filter === 'accepted' 
                   ? 'bg-emerald-700 text-white' 
@@ -154,7 +168,7 @@ const MyApplications = () => {
               ✓ Accepted
             </button>
             <button
-              onClick={() => setFilter('rejected')}
+              onClick={() => handleFilterChange('rejected')}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                 filter === 'rejected' 
                   ? 'bg-emerald-700 text-white' 
@@ -271,6 +285,14 @@ const MyApplications = () => {
             })}
           </div>
         )}
+
+        <div className="mt-10">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
+        </div>
       </div>
     </div>
   );

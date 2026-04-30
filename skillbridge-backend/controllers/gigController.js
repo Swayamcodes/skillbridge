@@ -1,5 +1,6 @@
 import axios from 'axios';
 import supabase from '../utils/supabase.js';
+import { getPaginationMeta, getPaginationParams } from '../utils/pagination.js';
 import { checkFraudRules } from './fraudController.js';
 
 const MODERATION_SERVICE_URL = 'http://localhost:5001/api/moderate';
@@ -88,18 +89,25 @@ export const createGig = async (req, res) => {
 
 export const getAllGigs = async (req, res) => {
   try {
-    const { data, error } = await supabase
+    const { page, limit, offset } = getPaginationParams(req.query);
+
+    const { data, error, count } = await supabase
       .from('gigs')
       .select(`
         *,
         creator:profiles!gigs_creator_id_fkey(id, full_name, email, college)
-      `)
+      `, { count: 'exact' })
       .eq('status', 'open')
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
 
     if (error) throw error;
 
-    res.json({ success: true, gigs: data });
+    res.json({
+      success: true,
+      gigs: data,
+      pagination: getPaginationMeta({ page, limit, total: count || 0 })
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

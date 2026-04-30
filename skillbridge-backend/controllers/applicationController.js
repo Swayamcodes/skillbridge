@@ -1,9 +1,11 @@
 import supabase from '../utils/supabase.js';
+import { getPaginationMeta, getPaginationParams } from '../utils/pagination.js';
 import { checkFraudRules } from './fraudController.js';
 
 export const getMyApplications = async (req, res) => {
   try {
     const userId = req.user.id;
+    const { page, limit, offset } = getPaginationParams(req.query);
 
     const { data: profile } = await supabase
       .from('profiles')
@@ -11,18 +13,23 @@ export const getMyApplications = async (req, res) => {
       .eq('user_id', userId)
       .single();
 
-    const { data, error } = await supabase
+    const { data, error, count } = await supabase
       .from('applications')
       .select(`
         *,
         gig:gigs(id, title, type, price, credits, status)
-      `)
+      `, { count: 'exact' })
       .eq('applicant_id', profile.id)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
 
     if (error) throw error;
 
-    res.json({ success: true, applications: data });
+    res.json({
+      success: true,
+      applications: data,
+      pagination: getPaginationMeta({ page, limit, total: count || 0 })
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

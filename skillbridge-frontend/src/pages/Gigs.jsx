@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import Pagination from '../components/Pagination';
 import { GigCardSkeleton } from '../components/Skeletons';
 import api from '../services/api';
 
@@ -11,15 +12,18 @@ const Gigs = () => {
   const [sortBy, setSortBy] = useState('newest');
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [allSkills, setAllSkills] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     fetchGigs();
   }, []);
 
-  const fetchGigs = async () => {
+  const fetchGigs = async (page = 1) => {
     try {
-      const response = await api.get('/api/gigs');
+      const response = await api.get(`/api/gigs?page=${page}&limit=12`);
       setGigs(response.data.gigs);
+      setTotalPages(response.data.pagination?.totalPages || 1);
       
       // Extract unique skills
       const skills = new Set();
@@ -32,6 +36,12 @@ const Gigs = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    fetchGigs(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const toggleSkill = (skill) => {
@@ -363,6 +373,14 @@ const Gigs = () => {
             ))}
           </div>
         )}
+
+        <div className="mt-10">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
+        </div>
       </div>
     </div>
   );

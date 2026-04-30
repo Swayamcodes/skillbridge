@@ -1,6 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import Pagination from '../components/Pagination';
 import { TableRowSkeleton } from '../components/Skeletons';
 import api from '../services/api';
 
@@ -9,24 +10,40 @@ const Wallet = () => {
   const [transactions, setTransactions] = useState([]);
   const [creditHistory, setCreditHistory] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [transactionsPage, setTransactionsPage] = useState(1);
+  const [transactionsTotalPages, setTransactionsTotalPages] = useState(1);
+  const [creditsPage, setCreditsPage] = useState(1);
+  const [creditsTotalPages, setCreditsTotalPages] = useState(1);
 
   useEffect(() => {
     fetchData();
   }, []);
 
-  const fetchData = async () => {
+  const fetchData = async (txPage = 1, creditPage = 1) => {
     try {
       const [txRes, creditsRes] = await Promise.all([
-        api.get('/api/wallet/transactions'),
-        api.get('/api/wallet/credits-history')
+        api.get(`/api/wallet/transactions?page=${txPage}&limit=10`),
+        api.get(`/api/wallet/credits-history?page=${creditPage}&limit=10`)
       ]);
       setTransactions(txRes.data.transactions);
       setCreditHistory(creditsRes.data.history);
+      setTransactionsTotalPages(txRes.data.pagination?.totalPages || 1);
+      setCreditsTotalPages(creditsRes.data.pagination?.totalPages || 1);
     } catch (error) {
       console.error('Error fetching wallet data:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleTransactionsPageChange = (page) => {
+    setTransactionsPage(page);
+    fetchData(page, creditsPage);
+  };
+
+  const handleCreditsPageChange = (page) => {
+    setCreditsPage(page);
+    fetchData(transactionsPage, page);
   };
 
   if (loading) {
@@ -232,6 +249,11 @@ const Wallet = () => {
                     </div>
                   </div>
                 ))}
+                <Pagination
+                  currentPage={transactionsPage}
+                  totalPages={transactionsTotalPages}
+                  onPageChange={handleTransactionsPageChange}
+                />
               </div>
             )}
           </div>
@@ -287,6 +309,11 @@ const Wallet = () => {
                     </div>
                   </div>
                 ))}
+                <Pagination
+                  currentPage={creditsPage}
+                  totalPages={creditsTotalPages}
+                  onPageChange={handleCreditsPageChange}
+                />
               </div>
             )}
           </div>
