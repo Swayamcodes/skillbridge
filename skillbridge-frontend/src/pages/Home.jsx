@@ -8,9 +8,30 @@ const Home = () => {
   const { profile, logout } = useContext(AuthContext);
   const [recommendations, setRecommendations] = useState([]);
   const [loadingRecs, setLoadingRecs] = useState(false);
+  const [stats, setStats] = useState({
+    gigs_posted_completed: 0,
+    gigs_completed_as_freelancer: 0,
+    total_credits_earned: 0,
+    total_money_earned: 0
+  });
 
   useEffect(() => {
     fetchRecommendations();
+    fetchUserStats();
+  }, []);
+
+  useEffect(() => {
+    const refreshStats = () => {
+      fetchUserStats();
+    };
+
+    window.addEventListener('focus', refreshStats);
+    window.addEventListener('skillbridge:stats-updated', refreshStats);
+
+    return () => {
+      window.removeEventListener('focus', refreshStats);
+      window.removeEventListener('skillbridge:stats-updated', refreshStats);
+    };
   }, []);
 
   const fetchRecommendations = async () => {
@@ -30,6 +51,15 @@ const Home = () => {
   const truncateText = (text, maxLength = 140) => {
     if (!text) return 'No description available.';
     return text.length > maxLength ? `${text.slice(0, maxLength).trim()}...` : text;
+  };
+
+  const fetchUserStats = async () => {
+    try {
+      const response = await api.get('/api/stats/user');
+      setStats(response.data.stats || {});
+    } catch (error) {
+      console.error('Error fetching user stats:', error);
+    }
   };
 
   return (
@@ -238,7 +268,7 @@ const Home = () => {
                   <span className="text-xl">📝</span>
                 </div>
               </div>
-              <p className="text-3xl font-light mb-1">0</p>
+              <p className="text-3xl font-light mb-1">{stats.gigs_posted_completed || 0}</p>
               <p className="text-sm text-gray-600">Gigs Posted</p>
             </div>
 
@@ -248,7 +278,7 @@ const Home = () => {
                   <span className="text-xl">✓</span>
                 </div>
               </div>
-              <p className="text-3xl font-light mb-1">0</p>
+              <p className="text-3xl font-light mb-1">{stats.gigs_completed_as_freelancer || 0}</p>
               <p className="text-sm text-gray-600">Gigs Completed</p>
             </div>
 
@@ -258,8 +288,8 @@ const Home = () => {
                   <span className="text-xl">⏳</span>
                 </div>
               </div>
-              <p className="text-3xl font-light mb-1">0</p>
-              <p className="text-sm text-gray-600">Active Applications</p>
+              <p className="text-3xl font-light mb-1">{stats.total_credits_earned || 0}</p>
+              <p className="text-sm text-gray-600">Credits Earned</p>
             </div>
 
             <div className="bg-white rounded-xl border border-gray-200 p-6">
@@ -268,8 +298,8 @@ const Home = () => {
                   <span className="text-xl">⭐</span>
                 </div>
               </div>
-              <p className="text-3xl font-light mb-1">0.0</p>
-              <p className="text-sm text-gray-600">Rating</p>
+              <p className="text-3xl font-light mb-1">₹{stats.total_money_earned || 0}</p>
+              <p className="text-sm text-gray-600">Money Earned</p>
             </div>
           </div>
         </div>

@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
 import { GigCardSkeleton } from '../components/Skeletons';
 import api from '../services/api';
 
 const MyGigs = () => {
+  const { refreshProfile } = useContext(AuthContext);
   const [activeTab, setActiveTab] = useState('posted');
   const [postedGigs, setPostedGigs] = useState([]);
   const [assignedGigs, setAssignedGigs] = useState([]);
@@ -25,6 +27,20 @@ const MyGigs = () => {
       console.error('Error fetching gigs:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleComplete = async (gigId) => {
+    if (!window.confirm('Are you sure the work is complete?')) return;
+
+    try {
+      await api.put(`/api/gigs/${gigId}/complete`);
+      await fetchGigs();
+      refreshProfile?.();
+      window.dispatchEvent(new Event('skillbridge:stats-updated'));
+      alert('Payment released!');
+    } catch (error) {
+      alert(error.response?.data?.message || 'Failed to complete gig');
     }
   };
 
@@ -109,6 +125,15 @@ const MyGigs = () => {
           >
             View Details
           </Link>
+          {isPosted && gig.status === 'assigned' && (
+            <button
+              type="button"
+              onClick={() => handleComplete(gig.id)}
+              className="flex-1 text-center bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors"
+            >
+              Mark Complete
+            </button>
+          )}
           {isPosted && (
             <Link
               to={`/gigs/${gig.id}/applicants`}

@@ -15,6 +15,7 @@ import paymentRoutes from './routes/payment.js';
 import walletRoutes from './routes/wallet.js';
 import reviewRoutes from './routes/review.js';
 import mlRoutes from './routes/ml.js';
+import statsRoutes from './routes/stats.js';
 
 
 
@@ -37,6 +38,7 @@ app.use('/api/payment', paymentRoutes);
 app.use('/api/wallet', walletRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/ml', mlRoutes);
+app.use('/api/stats', statsRoutes);
 
 
 const PORT = process.env.PORT || 5000;

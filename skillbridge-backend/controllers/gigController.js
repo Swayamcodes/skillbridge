@@ -304,6 +304,8 @@ export const completeGig = async (req, res) => {
     transactionId: null,
     gigId: null,
     freelancerId: null,
+    transactionStatusBeforeUpdate: null,
+    gigStatusBeforeUpdate: null,
     freelancerCreditUpdated: false,
     originalFreelancerCredits: null,
     freelancerWalletUpdated: false,
@@ -317,50 +319,107 @@ export const completeGig = async (req, res) => {
     const { id } = req.params;
     const userId = req.user.id;
 
-    const { data: profile } = await supabase
+    console.log('Complete gig requested:', { gig_id: id, auth_user_id: userId });
+
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('id')
       .eq('user_id', userId)
       .single();
 
-    // Get gig with transaction
-    const { data: gig } = await supabase
+    if (profileError) throw profileError;
+    if (!profile) {
+      console.warn('Complete gig failed: profile not found', { gig_id: id, auth_user_id: userId });
+      return res.status(404).json({ success: false, message: 'Profile not found' });
+    }
+
+    const { data: gig, error: gigError } = await supabase
       .from('gigs')
       .select('*')
       .eq('id', id)
-      .single();
+      .maybeSingle();
 
+    if (gigError) throw gigError;
     if (!gig) {
+      console.warn('Complete gig failed: gig not found', { gig_id: id, profile_id: profile.id });
       return res.status(404).json({ success: false, message: 'Gig not found' });
     }
 
+    console.log('Complete gig loaded gig:', {
+      gig_id: id,
+      creator_id: gig.creator_id,
+      assigned_to: gig.assigned_to,
+      status: gig.status,
+      type: gig.type,
+      requester_profile_id: profile.id
+    });
+
     if (gig.creator_id !== profile.id) {
+      console.warn('Complete gig forbidden: requester is not creator', {
+        gig_id: id,
+        creator_id: gig.creator_id,
+        requester_profile_id: profile.id
+      });
       return res.status(403).json({ success: false, message: 'Only creator can mark as complete' });
     }
 
     if (gig.status !== 'assigned') {
+      console.warn('Complete gig rejected: gig is not assigned', {
+        gig_id: id,
+        status: gig.status
+      });
       return res.status(400).json({ success: false, message: 'Gig is not assigned' });
     }
 
-    // Get transaction
-    const { data: transaction } = await supabase
+    const { data: transaction, error: transactionError } = await supabase
       .from('transactions')
       .select('*')
       .eq('gig_id', id)
       .eq('status', 'escrow')
-      .single();
+      .maybeSingle();
 
+    if (transactionError) throw transactionError;
     if (!transaction) {
+      console.warn('Complete gig failed: active escrow transaction not found', { gig_id: id });
       return res.status(404).json({ success: false, message: 'Transaction not found' });
+    }
+
+    console.log('Complete gig loaded escrow transaction:', {
+      gig_id: id,
+      transaction_id: transaction.id,
+      transaction_type: transaction.type,
+      creator_id: transaction.creator_id,
+      freelancer_id: transaction.freelancer_id,
+      amount: transaction.amount,
+      credits: transaction.credits
+    });
+
+    if (transaction.creator_id !== gig.creator_id || transaction.freelancer_id !== gig.assigned_to) {
+      console.error('Complete gig failed: transaction does not match gig assignment', {
+        gig_id: id,
+        transaction_id: transaction.id,
+        gig_creator_id: gig.creator_id,
+        gig_assigned_to: gig.assigned_to,
+        transaction_creator_id: transaction.creator_id,
+        transaction_freelancer_id: transaction.freelancer_id
+      });
+      throw new Error('Transaction does not match gig assignment');
     }
 
     rollbackState.transactionId = transaction.id;
     rollbackState.gigId = id;
     rollbackState.freelancerId = transaction.freelancer_id;
+    rollbackState.transactionStatusBeforeUpdate = transaction.status;
+    rollbackState.gigStatusBeforeUpdate = gig.status;
 
-    // Release payment/credits
     if (transaction.type === 'barter') {
-      // Add credits to freelancer
+      console.log('Complete gig releasing barter credits:', {
+        gig_id: id,
+        transaction_id: transaction.id,
+        freelancer_id: transaction.freelancer_id,
+        credits: transaction.credits
+      });
+
       const { data: freelancer, error: freelancerError } = await supabase
         .from('profiles')
         .select('credits')
@@ -373,13 +432,18 @@ export const completeGig = async (req, res) => {
       const { error: updateCreditsError } = await supabase
         .from('profiles')
         .update({
-          credits: freelancer.credits + transaction.credits
+          credits: Number(freelancer.credits || 0) + Number(transaction.credits || 0)
         })
         .eq('id', transaction.freelancer_id);
       if (updateCreditsError) throw updateCreditsError;
       rollbackState.freelancerCreditUpdated = true;
 
-      // Log credit transaction
+      console.log('Complete gig updated freelancer credits:', {
+        freelancer_id: transaction.freelancer_id,
+        previous_credits: freelancer.credits,
+        added_credits: transaction.credits
+      });
+
       const { data: creditLedger, error: creditLedgerError } = await supabase
         .from('credits_ledger')
         .insert([{
@@ -393,27 +457,53 @@ export const completeGig = async (req, res) => {
         .single();
       if (creditLedgerError) throw creditLedgerError;
       rollbackState.creditLedgerId = creditLedger.id;
-    } else {
-      // For paid gigs, add to freelancer's wallet balance
+
+      console.log('Complete gig inserted earned credits ledger entry:', {
+        gig_id: id,
+        ledger_id: creditLedger.id,
+        from_user: transaction.creator_id,
+        to_user: transaction.freelancer_id,
+        amount: transaction.credits
+      });
+    } else if (transaction.type === 'paid') {
+      console.log('Complete gig releasing paid wallet balance:', {
+        gig_id: id,
+        transaction_id: transaction.id,
+        freelancer_id: transaction.freelancer_id,
+        amount: transaction.amount
+      });
+
       const { data: freelancer, error: freelancerError } = await supabase
         .from('profiles')
-        .select('*')
+        .select('wallet_balance')
         .eq('id', transaction.freelancer_id)
         .single();
       if (freelancerError) throw freelancerError;
 
-      // Add wallet_balance column value (we'll create this column)
-      const currentBalance = freelancer.wallet_balance || 0;
+      const currentBalance = Number(freelancer.wallet_balance || 0);
       rollbackState.originalWalletBalance = currentBalance;
-      
+
       const { error: walletUpdateError } = await supabase
         .from('profiles')
         .update({
-          wallet_balance: currentBalance + transaction.amount
+          wallet_balance: currentBalance + Number(transaction.amount || 0)
         })
         .eq('id', transaction.freelancer_id);
       if (walletUpdateError) throw walletUpdateError;
       rollbackState.freelancerWalletUpdated = true;
+
+      console.log('Complete gig updated freelancer wallet balance:', {
+        freelancer_id: transaction.freelancer_id,
+        previous_wallet_balance: currentBalance,
+        added_amount: transaction.amount
+      });
+    } else {
+      console.error('Complete gig failed: unsupported transaction type', {
+        gig_id: id,
+        transaction_id: transaction.id,
+        transaction_type: transaction.type
+      });
+      throw new Error('Unsupported transaction type');
     }
 
     try {
@@ -440,7 +530,11 @@ export const completeGig = async (req, res) => {
       console.error('Fraud check failed for freelancer after completion:', fraudError.message);
     }
 
-    // Update transaction status
+    console.log('Complete gig updating transaction status to completed:', {
+      transaction_id: transaction.id,
+      gig_id: id
+    });
+
     const { error: transactionUpdateError } = await supabase
       .from('transactions')
       .update({
@@ -451,7 +545,8 @@ export const completeGig = async (req, res) => {
     if (transactionUpdateError) throw transactionUpdateError;
     rollbackState.transactionCompleted = true;
 
-    // Update gig status
+    console.log('Complete gig updating gig status to completed:', { gig_id: id });
+
     const { error: gigUpdateError } = await supabase
       .from('gigs')
       .update({ status: 'completed' })
@@ -459,23 +554,47 @@ export const completeGig = async (req, res) => {
     if (gigUpdateError) throw gigUpdateError;
     rollbackState.gigCompleted = true;
 
-    res.json({ success: true, message: 'Gig completed successfully' });
+    console.log('Complete gig succeeded:', {
+      gig_id: id,
+      transaction_id: transaction.id,
+      transaction_type: transaction.type,
+      freelancer_id: transaction.freelancer_id
+    });
+
+    res.json({ success: true, message: 'Gig completed and payment/credits released' });
   } catch (error) {
-    console.error('Complete gig error:', error);
+    console.error('Complete gig error:', {
+      message: error.message,
+      stack: error.stack,
+      rollbackState
+    });
 
     try {
+      console.warn('Complete gig rollback started:', rollbackState);
+
       if (rollbackState.gigCompleted && rollbackState.gigId) {
         await supabase
           .from('gigs')
-          .update({ status: 'assigned' })
+          .update({ status: rollbackState.gigStatusBeforeUpdate || 'assigned' })
           .eq('id', rollbackState.gigId);
+        console.warn('Complete gig rollback restored gig status:', {
+          gig_id: rollbackState.gigId,
+          status: rollbackState.gigStatusBeforeUpdate || 'assigned'
+        });
       }
 
       if (rollbackState.transactionCompleted && rollbackState.transactionId) {
         await supabase
           .from('transactions')
-          .update({ status: 'escrow', completed_at: null })
+          .update({
+            status: rollbackState.transactionStatusBeforeUpdate || 'escrow',
+            completed_at: null
+          })
           .eq('id', rollbackState.transactionId);
+        console.warn('Complete gig rollback restored transaction status:', {
+          transaction_id: rollbackState.transactionId,
+          status: rollbackState.transactionStatusBeforeUpdate || 'escrow'
+        });
       }
 
       if (rollbackState.creditLedgerId) {
@@ -483,6 +602,9 @@ export const completeGig = async (req, res) => {
           .from('credits_ledger')
           .delete()
           .eq('id', rollbackState.creditLedgerId);
+        console.warn('Complete gig rollback deleted credit ledger entry:', {
+          ledger_id: rollbackState.creditLedgerId
+        });
       }
 
       if (rollbackState.freelancerCreditUpdated && rollbackState.freelancerId) {
@@ -490,6 +612,10 @@ export const completeGig = async (req, res) => {
           .from('profiles')
           .update({ credits: rollbackState.originalFreelancerCredits })
           .eq('id', rollbackState.freelancerId);
+        console.warn('Complete gig rollback restored freelancer credits:', {
+          freelancer_id: rollbackState.freelancerId,
+          credits: rollbackState.originalFreelancerCredits
+        });
       }
 
       if (rollbackState.freelancerWalletUpdated && rollbackState.freelancerId) {
@@ -497,7 +623,13 @@ export const completeGig = async (req, res) => {
           .from('profiles')
           .update({ wallet_balance: rollbackState.originalWalletBalance })
           .eq('id', rollbackState.freelancerId);
+        console.warn('Complete gig rollback restored freelancer wallet balance:', {
+          freelancer_id: rollbackState.freelancerId,
+          wallet_balance: rollbackState.originalWalletBalance
+        });
       }
+
+      console.warn('Complete gig rollback finished:', rollbackState);
     } catch (rollbackError) {
       console.error('Complete gig rollback error:', rollbackError);
     }

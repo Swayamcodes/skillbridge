@@ -6,7 +6,7 @@ import api from '../services/api';
 const GigDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { profile } = useContext(AuthContext);
+  const { profile, refreshProfile } = useContext(AuthContext);
   
   const [gig, setGig] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -53,13 +53,18 @@ const GigDetail = () => {
   };
 
   const handleComplete = async () => {
-    if (!window.confirm('Mark this gig as complete? This will release payment/credits to the freelancer.')) return;
+    if (!window.confirm('Are you sure the work is complete?')) return;
 
     try {
       await api.put(`/api/gigs/${id}/complete`);
-      fetchGig();
+      alert('Payment released!');
+      await fetchGig();
+      refreshProfile?.();
+      window.dispatchEvent(new Event('skillbridge:stats-updated'));
     } catch (error) {
-      setError(error.response?.data?.message || 'Failed to complete gig');
+      const message = error.response?.data?.message || 'Failed to complete gig';
+      setError(message);
+      alert(message);
     }
   };
 
@@ -206,6 +211,27 @@ const GigDetail = () => {
                 </div>
               </div>
             )}
+
+            {isCreator && gig.status === 'assigned' && (
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-5">
+                <h2 className="text-lg font-medium mb-2 text-gray-900">
+                  <span>âœ“</span> Complete this Gig
+                </h2>
+                <p className="text-gray-700 mb-4">
+                  Mark this gig as complete to release{' '}
+                  <span className="font-medium text-emerald-700">
+                    {gig.type === 'paid' ? `₹${gig.price}` : `${gig.credits} credits`}
+                  </span>{' '}
+                  to the freelancer.
+                </p>
+                <button
+                  onClick={handleComplete}
+                  className="bg-emerald-700 text-white px-6 py-3 rounded-lg hover:bg-emerald-800 transition-colors font-medium"
+                >
+                  Complete & Release Payment
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Description Section */}
@@ -294,22 +320,6 @@ const GigDetail = () => {
                   )}
                 </button>
               </form>
-            </div>
-          )}
-
-          {/* Mark as Complete */}
-          {isCreator && gig.status === 'assigned' && (
-            <div className="p-8 bg-blue-50 border-t border-blue-200">
-              <h2 className="text-lg font-medium mb-3 flex items-center gap-2">
-                <span>✓</span> Mark as Complete
-              </h2>
-              <p className="text-gray-700 mb-4">Once the work is done, mark this gig as complete to release payment/credits.</p>
-              <button
-                onClick={handleComplete}
-                className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
-              >
-                Mark as Complete
-              </button>
             </div>
           )}
 

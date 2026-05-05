@@ -46,6 +46,37 @@ const Wallet = () => {
     fetchData(transactionsPage, page);
   };
 
+  const getPaymentStatusBadge = (status) => {
+    const badges = {
+      escrow: 'bg-yellow-100 text-yellow-800 border border-yellow-200',
+      completed: 'bg-green-100 text-green-800 border border-green-200',
+      disputed: 'bg-red-100 text-red-800 border border-red-200'
+    };
+
+    return badges[status] || 'bg-gray-100 text-gray-800 border border-gray-200';
+  };
+
+  const getPaymentStatusText = (tx) => {
+    if (tx.status === 'escrow') {
+      return 'Payment in escrow - pending completion';
+    }
+
+    if (tx.status === 'completed') {
+      const completedDate = tx.completed_at || tx.updated_at || tx.created_at;
+      return `Completed on ${new Date(completedDate).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })}`;
+    }
+
+    if (tx.status === 'disputed') {
+      return 'Disputed - needs resolution';
+    }
+
+    return tx.status;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
@@ -227,6 +258,9 @@ const Wallet = () => {
                             day: 'numeric'
                           })}
                         </p>
+                        <p className="text-sm text-gray-600 mt-2">
+                          {getPaymentStatusText(tx)}
+                        </p>
                       </div>
                       <div className="text-right ml-4">
                         <p className={`text-xl font-medium ${
@@ -236,13 +270,9 @@ const Wallet = () => {
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className={`text-xs px-3 py-1 rounded-full font-medium ${
-                        tx.status === 'completed' 
-                          ? 'bg-green-100 text-green-800 border border-green-200' 
-                          : tx.status === 'pending'
-                          ? 'bg-yellow-100 text-yellow-800 border border-yellow-200'
-                          : 'bg-gray-100 text-gray-800 border border-gray-200'
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                      <span className={`text-xs px-3 py-1 rounded-full font-medium uppercase w-fit ${
+                        getPaymentStatusBadge(tx.status)
                       }`}>
                         {tx.status === 'completed' ? '✓' : '⏳'} {tx.status}
                       </span>

@@ -11,21 +11,43 @@ const Profile = () => {
   const [reviews, setReviews] = useState([]);
   const [avgRating, setAvgRating] = useState(0);
   const [totalReviews, setTotalReviews] = useState(0);
+  const [stats, setStats] = useState({
+    gigs_posted_completed: 0,
+    gigs_completed_as_freelancer: 0,
+    total_credits_earned: 0,
+    total_money_earned: 0
+  });
 
   useEffect(() => {
     fetchProfile();
   }, []);
 
+  useEffect(() => {
+    const refreshProfileStats = () => {
+      fetchProfile();
+    };
+
+    window.addEventListener('focus', refreshProfileStats);
+    window.addEventListener('skillbridge:stats-updated', refreshProfileStats);
+
+    return () => {
+      window.removeEventListener('focus', refreshProfileStats);
+      window.removeEventListener('skillbridge:stats-updated', refreshProfileStats);
+    };
+  }, []);
+
   const fetchProfile = async () => {
     try {
-      const [profileRes, reviewsRes] = await Promise.all([
+      const [profileRes, reviewsRes, statsRes] = await Promise.all([
         api.get(`/api/profiles/${authProfile.id}`),
-        api.get(`/api/reviews/user/${authProfile.id}`)
+        api.get(`/api/reviews/user/${authProfile.id}`),
+        api.get('/api/stats/user')
       ]);
       setProfile(profileRes.data.profile);
       setReviews(reviewsRes.data.reviews);
       setAvgRating(reviewsRes.data.averageRating);
       setTotalReviews(reviewsRes.data.totalReviews);
+      setStats(statsRes.data.stats || {});
     } catch (error) {
       console.error('Error fetching profile:', error);
     } finally {
@@ -151,6 +173,25 @@ const Profile = () => {
               <p className="text-gray-700 leading-relaxed">
                 {profile?.bio || 'No bio added yet. Click "Edit Profile" to add one.'}
               </p>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <p className="text-2xl font-light mb-1">{stats.gigs_posted_completed || 0}</p>
+                <p className="text-xs text-gray-600">Gigs Posted</p>
+              </div>
+              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <p className="text-2xl font-light mb-1">{stats.gigs_completed_as_freelancer || 0}</p>
+                <p className="text-xs text-gray-600">Gigs Completed</p>
+              </div>
+              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <p className="text-2xl font-light mb-1 text-emerald-700">{stats.total_credits_earned || 0}</p>
+                <p className="text-xs text-gray-600">Credits Earned</p>
+              </div>
+              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <p className="text-2xl font-light mb-1 text-emerald-700">₹{stats.total_money_earned || 0}</p>
+                <p className="text-xs text-gray-600">Money Earned</p>
+              </div>
             </div>
 
             {/* Contact Info */}
