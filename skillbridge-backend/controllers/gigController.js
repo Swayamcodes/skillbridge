@@ -49,7 +49,7 @@ export const createGig = async (req, res) => {
       .from('profiles')
       .select('id')
       .eq('user_id', userId)
-      .single();
+      .maybeSingle();
 
     if (profileError) throw profileError;
 
@@ -325,7 +325,7 @@ export const completeGig = async (req, res) => {
       .from('profiles')
       .select('id')
       .eq('user_id', userId)
-      .single();
+      .maybeSingle();
 
     if (profileError) throw profileError;
     if (!profile) {
@@ -371,14 +371,25 @@ export const completeGig = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Gig is not assigned' });
     }
 
-    const { data: transaction, error: transactionError } = await supabase
+    const { data: transactions, error: transactionError } = await supabase
       .from('transactions')
       .select('*')
       .eq('gig_id', id)
-      .eq('status', 'escrow')
-      .maybeSingle();
+      .eq('status', 'escrow');
 
     if (transactionError) throw transactionError;
+    if ((transactions || []).length > 1) {
+      console.error('Complete gig failed: multiple active escrow transactions found', {
+        gig_id: id,
+        transaction_ids: transactions.map((item) => item.id)
+      });
+      return res.status(409).json({
+        success: false,
+        message: 'Multiple active escrow transactions found for this gig. Please resolve duplicate transactions before completing.'
+      });
+    }
+
+    const transaction = transactions?.[0];
     if (!transaction) {
       console.warn('Complete gig failed: active escrow transaction not found', { gig_id: id });
       return res.status(404).json({ success: false, message: 'Transaction not found' });

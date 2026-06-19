@@ -1,30 +1,46 @@
-import { createContext, useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { AuthContext } from './auth';
 import { authAPI } from '../services/api';
-
-export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const checkAuth = async () => {
+  const clearAuth = useCallback((reason, error) => {
+    console.log('AuthContext setUser(null):', reason, error?.response?.status || error?.message || '');
+    localStorage.removeItem('token');
+    setUser(null);
+    setProfile(null);
+  }, []);
+
+  const checkAuth = useCallback(async () => {
     const token = localStorage.getItem('token');
-    if (token) {
-      try {
-        const response = await authAPI.getCurrentUser();
-        setUser(response.data.user);
-        setProfile(response.data.profile);
-      } catch (error) {
-        localStorage.removeItem('token');
-      }
+    if (!token) {
+      setLoading(false);
+      return;
     }
-    setLoading(false);
-  };
+
+    try {
+      const response = await authAPI.getCurrentUser();
+      setUser(response.data.user);
+      setProfile(response.data.profile);
+    } catch (error) {
+      const status = error.response?.status;
+
+      if (status === 401 || status === 403) {
+        clearAuth('stored token rejected by /api/auth/me', error);
+      } else {
+        console.error('Auth check failed without clearing token:', error);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [clearAuth]);
 
   useEffect(() => {
     checkAuth();
-  }, []);
+  }, [checkAuth]);
 
   const login = async (email, password) => {
     const response = await authAPI.login({ email, password });
@@ -40,10 +56,13 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
-    await authAPI.logout();
-    localStorage.removeItem('token');
-    setUser(null);
-    setProfile(null);
+    try {
+      await authAPI.logout();
+    } catch (error) {
+      console.error('Logout request failed; clearing local auth state anyway:', error);
+    } finally {
+      clearAuth('logout requested');
+    }
   };
 
   const refreshProfile = async () => {

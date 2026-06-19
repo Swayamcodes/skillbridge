@@ -1,11 +1,11 @@
 import { useContext, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
+import { AuthContext } from '../context/auth';
 import { GigCardSkeleton } from '../components/Skeletons';
 import api from '../services/api';
 
 const Home = () => {
-  const { profile, logout } = useContext(AuthContext);
+  const { profile, logout, refreshProfile } = useContext(AuthContext);
   const [recommendations, setRecommendations] = useState([]);
   const [loadingRecs, setLoadingRecs] = useState(false);
   const [stats, setStats] = useState({
@@ -18,11 +18,13 @@ const Home = () => {
   useEffect(() => {
     fetchRecommendations();
     fetchUserStats();
+    refreshProfile?.();
   }, []);
 
   useEffect(() => {
     const refreshStats = () => {
       fetchUserStats();
+      refreshProfile?.();
     };
 
     window.addEventListener('focus', refreshStats);
@@ -32,7 +34,7 @@ const Home = () => {
       window.removeEventListener('focus', refreshStats);
       window.removeEventListener('skillbridge:stats-updated', refreshStats);
     };
-  }, []);
+  }, [refreshProfile]);
 
   const fetchRecommendations = async () => {
     setLoadingRecs(true);

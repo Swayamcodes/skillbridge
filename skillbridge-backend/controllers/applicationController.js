@@ -92,22 +92,28 @@ export const acceptApplication = async (req, res) => {
     const { id } = req.params;
     const userId = req.user.id;
 
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('id')
       .eq('user_id', userId)
-      .single();
+      .maybeSingle();
+
+    if (profileError) throw profileError;
+    if (!profile) {
+      return res.status(404).json({ success: false, message: 'Profile not found' });
+    }
 
     // Get application with full details
-    const { data: application } = await supabase
+    const { data: application, error: applicationError } = await supabase
       .from('applications')
       .select(`
         *,
-        gig:gigs(id, creator_id, type, price, credits, title)
+        gig:gigs(id, creator_id, type, price, credits, title, status)
       `)
       .eq('id', id)
-      .single();
+      .maybeSingle();
 
+    if (applicationError) throw applicationError;
     if (!application) {
       return res.status(404).json({ success: false, message: 'Application not found' });
     }
@@ -120,9 +126,39 @@ export const acceptApplication = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Application is no longer pending' });
     }
 
+    if (application.gig.status !== 'open') {
+      return res.status(400).json({ success: false, message: 'Gig is no longer open' });
+    }
+
+    const { data: existingTransactions, error: existingTransactionError } = await supabase
+      .from('transactions')
+      .select('id, status')
+      .eq('gig_id', application.gig.id)
+      .in('status', ['escrow', 'completed'])
+      .limit(1);
+
+    if (existingTransactionError) throw existingTransactionError;
+    if (existingTransactions?.length > 0) {
+      return res.status(400).json({ success: false, message: 'Gig already has an active transaction' });
+    }
+
     rollbackState.gigId = application.gig.id;
     rollbackState.applicationId = id;
     rollbackState.creatorId = application.gig.creator_id;
+
+    const { data: claimedApplication, error: claimApplicationError } = await supabase
+      .from('applications')
+      .update({ status: 'accepted' })
+      .eq('id', id)
+      .eq('status', 'pending')
+      .select('id')
+      .maybeSingle();
+
+    if (claimApplicationError) throw claimApplicationError;
+    if (!claimedApplication) {
+      return res.status(400).json({ success: false, message: 'Application is no longer pending' });
+    }
+    rollbackState.applicationAccepted = true;
 
     // If barter, check creator has enough credits
     if (application.gig.type === 'barter') {
@@ -135,6 +171,12 @@ export const acceptApplication = async (req, res) => {
       if (creatorProfileError) throw creatorProfileError;
 
       if (creatorProfile.credits < application.gig.credits) {
+        await supabase
+          .from('applications')
+          .update({ status: 'pending' })
+          .eq('id', id);
+        rollbackState.applicationAccepted = false;
+
         return res.status(400).json({ 
           success: false, 
           message: 'Insufficient credits' 
@@ -209,23 +251,21 @@ export const acceptApplication = async (req, res) => {
 
     rollbackState.transactionId = transaction.id;
 
-    // Update application status
-    const { error: applicationUpdateError } = await supabase
-      .from('applications')
-      .update({ status: 'accepted' })
-      .eq('id', id);
-    if (applicationUpdateError) throw applicationUpdateError;
-    rollbackState.applicationAccepted = true;
-
     // Update gig status and assign
-    const { error: gigUpdateError } = await supabase
+    const { data: assignedGig, error: gigUpdateError } = await supabase
       .from('gigs')
       .update({
         status: 'assigned',
         assigned_to: application.applicant_id
       })
-      .eq('id', application.gig.id);
+      .eq('id', application.gig.id)
+      .eq('status', 'open')
+      .select('id')
+      .maybeSingle();
     if (gigUpdateError) throw gigUpdateError;
+    if (!assignedGig) {
+      throw new Error('Gig is no longer open');
+    }
     rollbackState.gigAssigned = true;
 
     // Reject all other applications
