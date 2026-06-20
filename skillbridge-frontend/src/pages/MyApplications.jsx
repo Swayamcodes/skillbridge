@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Pagination from '../components/Pagination';
 import { GigCardSkeleton } from '../components/Skeletons';
+import Navbar from '../components/Navbar';
 import api from '../services/api';
 
 const MyApplications = () => {
@@ -54,19 +55,7 @@ const MyApplications = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
-        <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-            <Link to="/dashboard" className="text-xl font-light tracking-wide">Skill bridge</Link>
-            <div className="flex items-center gap-4">
-              <Link to="/gigs" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
-                Browse Gigs
-              </Link>
-              <Link to="/dashboard" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
-                Dashboard
-              </Link>
-            </div>
-          </div>
-        </nav>
+        <Navbar />
 
         <div className="max-w-6xl mx-auto px-6 py-12">
           <div className="mb-8">
@@ -108,20 +97,7 @@ const MyApplications = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
-      {/* Header/Navigation */}
-      <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <Link to="/dashboard" className="text-xl font-light tracking-wide">Skill bridge</Link>
-          <div className="flex items-center gap-4">
-            <Link to="/gigs" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
-              Browse Gigs
-            </Link>
-            <Link to="/dashboard" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
-              Dashboard
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <Navbar />
 
       <div className="max-w-6xl mx-auto px-6 py-12">
         {/* Header */}

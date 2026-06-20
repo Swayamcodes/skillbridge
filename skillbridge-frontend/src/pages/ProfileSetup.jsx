@@ -1,6 +1,7 @@
 import { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/auth';
+import Navbar from '../components/Navbar';
 import api from '../services/api';
 
 const ProfileSetup = () => {
@@ -43,8 +44,9 @@ const ProfileSetup = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white p-8">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-white">
+      <Navbar />
+      <div className="max-w-2xl mx-auto p-8">
         <div className="border-4 border-black shadow-brutal p-8">
           <h1 className="text-4xl font-bold mb-2">Complete Your Profile</h1>
           <p className="mb-6">Add your skills and info</p>

@@ -2,10 +2,11 @@ import { useContext, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/auth';
 import { GigCardSkeleton } from '../components/Skeletons';
+import Navbar from '../components/Navbar';
 import api from '../services/api';
 
 const Home = () => {
-  const { profile, logout, refreshProfile } = useContext(AuthContext);
+  const { profile, refreshProfile } = useContext(AuthContext);
   const [recommendations, setRecommendations] = useState([]);
   const [loadingRecs, setLoadingRecs] = useState(false);
   const [stats, setStats] = useState({
@@ -41,7 +42,11 @@ const Home = () => {
 
     try {
       const response = await api.get('/api/ml/recommended');
-      setRecommendations(Array.isArray(response.data?.recommendations) ? response.data.recommendations : []);
+      const matchedRecommendations = Array.isArray(response.data?.recommendations)
+        ? response.data.recommendations.filter((gig) => Number(gig.match_score) > 0)
+        : [];
+
+      setRecommendations(matchedRecommendations);
     } catch (error) {
       console.error('Error fetching recommendations:', error);
       setRecommendations([]);
@@ -66,23 +71,7 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
-      {/* Header/Navigation */}
-      <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-light tracking-wide">Skill bridge</h1>
-          <div className="flex items-center gap-4">
-            <div className="text-sm text-gray-600">
-              <span className="font-medium">{profile?.credits}</span> Credits
-            </div>
-            <button
-              onClick={logout}
-              className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-      </nav>
+      <Navbar showCredits />
 
       <div className="max-w-7xl mx-auto px-6 py-12">
         {/* Welcome Section */}

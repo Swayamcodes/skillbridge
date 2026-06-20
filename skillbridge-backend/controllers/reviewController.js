@@ -81,6 +81,30 @@ export const createReview = async (req, res) => {
     // Update reviewee's reputation score
     await updateReputationScore(revieweeId);
 
+    try {
+      const { data: revieweeProfile, error: revieweeProfileError } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('id', revieweeId)
+        .single();
+
+      if (revieweeProfileError) throw revieweeProfileError;
+
+      const { error: notificationError } = await supabase
+        .from('notifications')
+        .insert([{
+          user_id: revieweeProfile.user_id,
+          type: 'new_review',
+          title: 'New Review Received',
+          message: `You received a ${rating}-star review for "${gig.title}"`,
+          link: `/profile/${revieweeId}`
+        }]);
+
+      if (notificationError) throw notificationError;
+    } catch (notificationError) {
+      console.error('Failed to create new review notification:', notificationError);
+    }
+
     res.status(201).json({ success: true, review: data });
   } catch (error) {
     console.error('Review error:', error);

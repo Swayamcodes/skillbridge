@@ -75,6 +75,7 @@ export const getGigApplicants = async (req, res) => {
 };
 
 export const acceptApplication = async (req, res) => {
+  const db = req.supabase || supabase;
   const rollbackState = {
     gigId: null,
     applicationId: null,
@@ -91,8 +92,9 @@ export const acceptApplication = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
+    const traceId = `${id}-${Date.now()}`;
 
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile, error: profileError } = await db
       .from('profiles')
       .select('id')
       .eq('user_id', userId)
@@ -104,7 +106,7 @@ export const acceptApplication = async (req, res) => {
     }
 
     // Get application with full details
-    const { data: application, error: applicationError } = await supabase
+    const { data: application, error: applicationError } = await db
       .from('applications')
       .select(`
         *,
@@ -118,11 +120,54 @@ export const acceptApplication = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Application not found' });
     }
 
+    console.log('Accept application fetched:', {
+      trace_id: traceId,
+      application_id: application.id,
+      application_status: application.status,
+      gig_id: application.gig?.id,
+      gig_status: application.gig?.status,
+      applicant_id: application.applicant_id,
+      requester_profile_id: profile.id
+    });
+
     if (application.gig.creator_id !== profile.id) {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
 
     if (application.status !== 'pending') {
+      if (application.status === 'accepted') {
+        const { data: acceptedTransaction, error: acceptedTransactionError } = await db
+          .from('transactions')
+          .select('id')
+          .eq('gig_id', application.gig.id)
+          .eq('freelancer_id', application.applicant_id)
+          .in('status', ['escrow', 'completed'])
+          .maybeSingle();
+
+        if (acceptedTransactionError) throw acceptedTransactionError;
+
+        if (
+          application.gig.status === 'assigned' &&
+          acceptedTransaction
+        ) {
+          console.log('Accept application idempotent success:', {
+            trace_id: traceId,
+            application_id: application.id,
+            transaction_id: acceptedTransaction.id
+          });
+          return res.json({
+            success: true,
+            message: 'Application was already accepted',
+            alreadyAccepted: true
+          });
+        }
+
+        return res.status(409).json({
+          success: false,
+          message: 'Application acceptance is already being processed. Please refresh.'
+        });
+      }
+
       return res.status(400).json({ success: false, message: 'Application is no longer pending' });
     }
 
@@ -130,7 +175,7 @@ export const acceptApplication = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Gig is no longer open' });
     }
 
-    const { data: existingTransactions, error: existingTransactionError } = await supabase
+    const { data: existingTransactions, error: existingTransactionError } = await db
       .from('transactions')
       .select('id, status')
       .eq('gig_id', application.gig.id)
@@ -146,7 +191,13 @@ export const acceptApplication = async (req, res) => {
     rollbackState.applicationId = id;
     rollbackState.creatorId = application.gig.creator_id;
 
-    const { data: claimedApplication, error: claimApplicationError } = await supabase
+    console.log('Accept application before claim:', {
+      trace_id: traceId,
+      application_id: id,
+      expected_status: 'pending'
+    });
+
+    const { data: claimedApplication, error: claimApplicationError } = await db
       .from('applications')
       .update({ status: 'accepted' })
       .eq('id', id)
@@ -156,13 +207,44 @@ export const acceptApplication = async (req, res) => {
 
     if (claimApplicationError) throw claimApplicationError;
     if (!claimedApplication) {
-      return res.status(400).json({ success: false, message: 'Application is no longer pending' });
+      const { data: latestApplication, error: latestApplicationError } = await db
+        .from('applications')
+        .select('id, status')
+        .eq('id', id)
+        .maybeSingle();
+
+      if (latestApplicationError) throw latestApplicationError;
+
+      console.warn('Accept application claim missed:', {
+        trace_id: traceId,
+        application_id: id,
+        fetched_status: application.status,
+        latest_status: latestApplication?.status
+      });
+
+      if (latestApplication?.status === 'accepted') {
+        return res.status(409).json({
+          success: false,
+          message: 'Application acceptance is already being processed. Please refresh.'
+        });
+      }
+
+      return res.status(400).json({
+        success: false,
+        message: `Application cannot be accepted because its status is "${latestApplication?.status || 'unknown'}"`
+      });
     }
     rollbackState.applicationAccepted = true;
 
+    console.log('Accept application after claim:', {
+      trace_id: traceId,
+      application_id: id,
+      application_status: 'accepted'
+    });
+
     // If barter, check creator has enough credits
     if (application.gig.type === 'barter') {
-      const { data: creatorProfile, error: creatorProfileError } = await supabase
+      const { data: creatorProfile, error: creatorProfileError } = await db
         .from('profiles')
         .select('credits')
         .eq('id', application.gig.creator_id)
@@ -171,7 +253,7 @@ export const acceptApplication = async (req, res) => {
       if (creatorProfileError) throw creatorProfileError;
 
       if (creatorProfile.credits < application.gig.credits) {
-        await supabase
+        await db
           .from('applications')
           .update({ status: 'pending' })
           .eq('id', id);
@@ -186,7 +268,7 @@ export const acceptApplication = async (req, res) => {
       rollbackState.originalCredits = creatorProfile.credits;
 
       // Deduct credits from creator (lock in escrow)
-      const { error: deductCreditsError } = await supabase
+      const { error: deductCreditsError } = await db
         .from('profiles')
         .update({ 
           credits: creatorProfile.credits - application.gig.credits 
@@ -196,7 +278,7 @@ export const acceptApplication = async (req, res) => {
       rollbackState.creditsDeducted = true;
 
       // Log credit transaction
-      const { data: creditLedger, error: creditLedgerError } = await supabase
+      const { data: creditLedger, error: creditLedgerError } = await db
         .from('credits_ledger')
         .insert([{
           from_user: application.gig.creator_id,
@@ -238,7 +320,7 @@ export const acceptApplication = async (req, res) => {
       transactionData.credits = application.gig.credits;
     }
 
-    const { data: transaction, error: transactionError } = await supabase
+    const { data: transaction, error: transactionError } = await db
       .from('transactions')
       .insert([transactionData])
       .select()
@@ -252,7 +334,7 @@ export const acceptApplication = async (req, res) => {
     rollbackState.transactionId = transaction.id;
 
     // Update gig status and assign
-    const { data: assignedGig, error: gigUpdateError } = await supabase
+    const { data: assignedGig, error: gigUpdateError } = await db
       .from('gigs')
       .update({
         status: 'assigned',
@@ -269,13 +351,45 @@ export const acceptApplication = async (req, res) => {
     rollbackState.gigAssigned = true;
 
     // Reject all other applications
-    const { error: rejectOthersError } = await supabase
+    const { error: rejectOthersError } = await db
       .from('applications')
       .update({ status: 'rejected' })
       .eq('gig_id', application.gig.id)
+      .eq('status', 'pending')
       .neq('id', id);
     if (rejectOthersError) throw rejectOthersError;
     rollbackState.otherApplicationsRejected = true;
+
+    console.log('Accept application completed:', {
+      trace_id: traceId,
+      application_id: id,
+      gig_id: application.gig.id,
+      transaction_id: transaction.id
+    });
+
+    try {
+      const { data: applicantProfile, error: applicantProfileError } = await db
+        .from('profiles')
+        .select('user_id')
+        .eq('id', application.applicant_id)
+        .single();
+
+      if (applicantProfileError) throw applicantProfileError;
+
+      const { error: notificationError } = await db
+        .from('notifications')
+        .insert([{
+          user_id: applicantProfile.user_id,
+          type: 'application_accepted',
+          title: 'Application Accepted!',
+          message: `You've been accepted for "${application.gig.title}"`,
+          link: `/gigs/${application.gig.id}`
+        }]);
+
+      if (notificationError) throw notificationError;
+    } catch (notificationError) {
+      console.error('Failed to create application accepted notification:', notificationError);
+    }
 
     res.json({ success: true, message: 'Application accepted and transaction created' });
   } catch (error) {
@@ -283,43 +397,44 @@ export const acceptApplication = async (req, res) => {
 
     try {
       if (rollbackState.otherApplicationsRejected && rollbackState.gigId) {
-        await supabase
+        await db
           .from('applications')
           .update({ status: 'pending' })
           .eq('gig_id', rollbackState.gigId)
+          .eq('status', 'rejected')
           .neq('id', rollbackState.applicationId);
       }
 
       if (rollbackState.gigAssigned && rollbackState.gigId) {
-        await supabase
+        await db
           .from('gigs')
           .update({ status: 'open', assigned_to: null })
           .eq('id', rollbackState.gigId);
       }
 
       if (rollbackState.applicationAccepted && rollbackState.applicationId) {
-        await supabase
+        await db
           .from('applications')
           .update({ status: 'pending' })
           .eq('id', rollbackState.applicationId);
       }
 
       if (rollbackState.transactionId) {
-        await supabase
+        await db
           .from('transactions')
           .delete()
           .eq('id', rollbackState.transactionId);
       }
 
       if (rollbackState.creditLedgerId) {
-        await supabase
+        await db
           .from('credits_ledger')
           .delete()
           .eq('id', rollbackState.creditLedgerId);
       }
 
       if (rollbackState.creditsDeducted && rollbackState.creatorId) {
-        await supabase
+        await db
           .from('profiles')
           .update({ credits: rollbackState.originalCredits })
           .eq('id', rollbackState.creatorId);
@@ -330,7 +445,7 @@ export const acceptApplication = async (req, res) => {
 
     res.status(500).json({
       success: false,
-      message: 'Failed to accept application safely. No changes were finalized.'
+      message: `Failed to accept application: ${error.message}`
     });
   }
 };
@@ -348,7 +463,7 @@ export const rejectApplication = async (req, res) => {
 
     const { data: application } = await supabase
       .from('applications')
-      .select('*, gig:gigs(creator_id)')
+      .select('*, gig:gigs(id, creator_id, title)')
       .eq('id', id)
       .single();
 
@@ -360,10 +475,36 @@ export const rejectApplication = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
 
-    await supabase
+    const { error: rejectionError } = await supabase
       .from('applications')
       .update({ status: 'rejected' })
       .eq('id', id);
+
+    if (rejectionError) throw rejectionError;
+
+    try {
+      const { data: applicantProfile, error: applicantProfileError } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('id', application.applicant_id)
+        .single();
+
+      if (applicantProfileError) throw applicantProfileError;
+
+      const { error: notificationError } = await supabase
+        .from('notifications')
+        .insert([{
+          user_id: applicantProfile.user_id,
+          type: 'application_rejected',
+          title: 'Application Update',
+          message: `Your application for "${application.gig.title}" was not selected`,
+          link: `/gigs/${application.gig.id}`
+        }]);
+
+      if (notificationError) throw notificationError;
+    } catch (notificationError) {
+      console.error('Failed to create application rejected notification:', notificationError);
+    }
 
     res.json({ success: true, message: 'Application rejected' });
   } catch (error) {

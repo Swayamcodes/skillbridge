@@ -201,6 +201,37 @@ export const applyToGig = async (req, res) => {
 
     if (error) throw error;
 
+    console.log('Application created:', {
+      application_id: data.id,
+      gig_id: data.gig_id,
+      applicant_id: data.applicant_id,
+      status: data.status
+    });
+
+    try {
+      const { data: creatorProfile, error: creatorProfileError } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('id', gig.creator_id)
+        .single();
+
+      if (creatorProfileError) throw creatorProfileError;
+
+      const { error: notificationError } = await supabase
+        .from('notifications')
+        .insert([{
+          user_id: creatorProfile.user_id,
+          type: 'new_application',
+          title: 'New Application',
+          message: `Someone applied to your gig "${gig.title}"`,
+          link: `/gigs/${gig.id}/applicants`
+        }]);
+
+      if (notificationError) throw notificationError;
+    } catch (notificationError) {
+      console.error('Failed to create new application notification:', notificationError);
+    }
+
     res.status(201).json({ success: true, application: data });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -564,6 +595,30 @@ export const completeGig = async (req, res) => {
       .eq('id', id);
     if (gigUpdateError) throw gigUpdateError;
     rollbackState.gigCompleted = true;
+
+    try {
+      const { data: freelancerProfile, error: freelancerProfileError } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('id', transaction.freelancer_id)
+        .single();
+
+      if (freelancerProfileError) throw freelancerProfileError;
+
+      const { error: notificationError } = await supabase
+        .from('notifications')
+        .insert([{
+          user_id: freelancerProfile.user_id,
+          type: 'gig_completed',
+          title: 'Payment Released!',
+          message: `Gig "${gig.title}" completed. Payment/credits released.`,
+          link: `/gigs/${gig.id}`
+        }]);
+
+      if (notificationError) throw notificationError;
+    } catch (notificationError) {
+      console.error('Failed to create gig completion notification:', notificationError);
+    }
 
     console.log('Complete gig succeeded:', {
       gig_id: id,

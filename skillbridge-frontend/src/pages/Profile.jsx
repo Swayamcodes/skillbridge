@@ -2,10 +2,11 @@ import { useState, useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/auth';
 import { ProfileSkeleton } from '../components/Skeletons';
+import Navbar from '../components/Navbar';
 import api from '../services/api';
 
 const Profile = () => {
-  const { profile: authProfile, logout } = useContext(AuthContext);
+  const { profile: authProfile } = useContext(AuthContext);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [reviews, setReviews] = useState([]);
@@ -58,22 +59,7 @@ const Profile = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
-        <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-            <Link to="/dashboard" className="text-xl font-light tracking-wide">Skill bridge</Link>
-            <div className="flex items-center gap-4">
-              <Link to="/dashboard" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
-                Dashboard
-              </Link>
-              <button
-                onClick={logout}
-                className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                Logout
-              </button>
-            </div>
-          </div>
-        </nav>
+        <Navbar />
 
         <div className="max-w-5xl mx-auto px-6 py-12">
           <Link
@@ -91,23 +77,7 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
-      {/* Header/Navigation */}
-      <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <Link to="/dashboard" className="text-xl font-light tracking-wide">Skill bridge</Link>
-          <div className="flex items-center gap-4">
-            <Link to="/dashboard" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
-              Dashboard
-            </Link>
-            <button
-              onClick={logout}
-              className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-      </nav>
+      <Navbar />
 
       <div className="max-w-5xl mx-auto px-6 py-12">
         {/* Back Button */}

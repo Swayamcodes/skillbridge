@@ -1,4 +1,4 @@
-import supabase from '../utils/supabase.js';
+import supabase, { createAuthenticatedClient } from '../utils/supabase.js';
 
 export const requireAuth = async (req, res, next) => {
   try {
@@ -23,6 +23,7 @@ export const requireAuth = async (req, res, next) => {
     }
 
     req.user = user;
+    req.supabase = createAuthenticatedClient(token);
     next();
 
   } catch (error) {

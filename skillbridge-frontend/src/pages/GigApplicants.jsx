@@ -1,7 +1,47 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, useCallback, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { AuthContext } from '../context/auth';
+import Navbar from '../components/Navbar';
 import api from '../services/api';
+
+const loadRazorpay = () => {
+  if (window.Razorpay) return Promise.resolve();
+
+  return new Promise((resolve, reject) => {
+    const existingScript = document.querySelector('script[data-skillbridge-razorpay]');
+
+    if (existingScript) {
+      existingScript.remove();
+    }
+
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    script.dataset.skillbridgeRazorpay = 'true';
+
+    const timeoutId = window.setTimeout(() => {
+      script.remove();
+      reject(new Error('Payment checkout timed out. Check your connection and try again.'));
+    }, 15000);
+
+    script.onload = () => {
+      window.clearTimeout(timeoutId);
+
+      if (window.Razorpay) {
+        resolve();
+      } else {
+        script.remove();
+        reject(new Error('Payment checkout failed to initialize.'));
+      }
+    };
+    script.onerror = () => {
+      window.clearTimeout(timeoutId);
+      script.remove();
+      reject(new Error('Failed to load payment checkout.'));
+    };
+    document.body.appendChild(script);
+  });
+};
 
 const GigApplicants = () => {
   const { id } = useParams();
@@ -9,12 +49,12 @@ const GigApplicants = () => {
   const [gig, setGig] = useState(null);
   const [applicants, setApplicants] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [acceptingId, setAcceptingId] = useState(null);
+  const [actionMessage, setActionMessage] = useState('');
+  const [actionError, setActionError] = useState('');
+  const acceptingRef = useRef(new Set());
 
-  useEffect(() => {
-    fetchData();
-  }, [id]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const [gigRes, applicantsRes] = await Promise.all([
         api.get(`/api/gigs/${id}`),
@@ -27,10 +67,20 @@ const GigApplicants = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleAccept = async (applicationId) => {
+    if (acceptingRef.current.has(applicationId)) return;
     if (!window.confirm('Accept this applicant? This action cannot be undone.')) return;
+
+    acceptingRef.current.add(applicationId);
+    setAcceptingId(applicationId);
+    setActionMessage('');
+    setActionError('');
 
     try {
       // If paid gig, initiate payment
@@ -38,11 +88,22 @@ const GigApplicants = () => {
         await handlePayment(applicationId);
       } else {
         // Barter gig - direct acceptance
-        await api.put(`/api/applications/${applicationId}/accept`);
-        fetchData();
+        const response = await api.put(`/api/applications/${applicationId}/accept`);
+        await fetchData();
+        setActionMessage(response.data?.message || 'Application accepted successfully.');
       }
     } catch (error) {
-      alert(error.response?.data?.message || 'Failed to accept');
+      const message = error.response?.data?.message || error.message || 'Failed to accept application';
+      console.error('Application acceptance error:', error);
+      setActionError(message);
+      alert(message);
+
+      if (error.response?.status === 409) {
+        await fetchData();
+      }
+    } finally {
+      acceptingRef.current.delete(applicationId);
+      setAcceptingId(null);
     }
   };
 
@@ -50,20 +111,29 @@ const GigApplicants = () => {
     try {
       // Create Razorpay order
       const orderRes = await api.post('/api/payment/create-order', {
-        gigId: id
+        gigId: id,
+        applicationId
       });
 
       const { order, key } = orderRes.data;
 
-      // Load Razorpay script
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-      script.async = true;
-      document.body.appendChild(script);
+      await loadRazorpay();
 
-      script.onload = () => {
+      if (!window.Razorpay) {
+        throw new Error('Payment checkout is unavailable');
+      }
+
+      await new Promise((resolve, reject) => {
+        let settled = false;
+
+        const settleOnce = (callback, value) => {
+          if (settled) return;
+          settled = true;
+          callback(value);
+        };
+
         const options = {
-          key: key,
+          key,
           amount: order.amount,
           currency: order.currency,
           name: 'SkillBridge',
@@ -71,17 +141,25 @@ const GigApplicants = () => {
           order_id: order.id,
           handler: async (response) => {
             try {
-              // Verify payment
               await api.post('/api/payment/verify', {
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
                 gigId: id,
-                applicationId: applicationId
+                applicationId
               });
-              fetchData();
-            } catch {
-              alert('Payment verification failed');
+              await fetchData();
+              setActionError('');
+              setActionMessage('Payment successful. Application accepted.');
+              settleOnce(resolve);
+            } catch (error) {
+              console.error('Payment verification error:', error);
+              settleOnce(reject, error);
+            }
+          },
+          modal: {
+            ondismiss: () => {
+              settleOnce(reject, new Error('Payment was cancelled.'));
             }
           },
           prefill: {
@@ -89,16 +167,21 @@ const GigApplicants = () => {
             email: profile?.email,
           },
           theme: {
-            color: '#047857' // emerald-700
+            color: '#047857'
           }
         };
 
         const rzp = new window.Razorpay(options);
+        rzp.on('payment.failed', (response) => {
+          settleOnce(reject, new Error(response.error?.description || 'Payment failed'));
+        });
+
+        setActionMessage('Payment checkout opened. Complete payment to accept the applicant.');
         rzp.open();
-      };
+      });
     } catch (error) {
       console.error('Payment error:', error);
-      alert('Failed to initiate payment');
+      throw error;
     }
   };
 
@@ -147,22 +230,20 @@ const GigApplicants = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
-      {/* Header/Navigation */}
-      <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <Link to="/dashboard" className="text-xl font-light tracking-wide">Skill bridge</Link>
-          <div className="flex items-center gap-4">
-            <Link to="/gigs" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
-              Browse Gigs
-            </Link>
-            <Link to="/dashboard" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
-              Dashboard
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <Navbar />
 
       <div className="max-w-5xl mx-auto px-6 py-12">
+        {actionError && (
+          <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {actionError}
+          </div>
+        )}
+        {actionMessage && (
+          <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            {actionMessage}
+          </div>
+        )}
+
         {/* Back Button */}
         <Link
           to={`/gigs/${id}`}
@@ -273,9 +354,10 @@ const GigApplicants = () => {
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleAccept(app.id)}
-                          className="bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-800 transition-colors"
+                          disabled={acceptingId !== null}
+                          className="bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                         >
-                          ✓ Accept
+                          {acceptingId === app.id ? 'Processing...' : '✓ Accept'}
                         </button>
                         <button
                           onClick={() => handleReject(app.id)}
