@@ -1,4 +1,5 @@
 from __future__ import annotations
+"""Text moderation helpers used by the AI service."""
 
 import re
 
@@ -9,6 +10,7 @@ profanity.load_censor_words()
 
 
 def moderate_text(text: str) -> dict:
+    """Censor profanity and report whether the input is safe."""
     if not isinstance(text, str):
         raise ValueError("text must be a string")
 

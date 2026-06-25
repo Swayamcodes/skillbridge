@@ -1,4 +1,5 @@
 from __future__ import annotations
+"""Recommendation helpers for matching users with gigs."""
 
 from typing import Any
 
@@ -7,6 +8,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 
 def recommend_gigs(user_skills: list, open_gigs: list) -> list[dict[str, Any]]:
+    """Return the top gig matches ranked by TF-IDF cosine similarity."""
     if not isinstance(user_skills, list):
         raise ValueError("user_skills must be a list")
     if not isinstance(open_gigs, list):

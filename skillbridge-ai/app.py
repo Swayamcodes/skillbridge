@@ -1,4 +1,5 @@
 from __future__ import annotations
+"""Flask entrypoints for the SkillBridge AI service."""
 
 from flask import Flask, jsonify, request
 from flask_cors import CORS
@@ -13,11 +14,13 @@ CORS(app)
 
 @app.route("/health", methods=["GET"])
 def health_check():
+    """Return a lightweight status response for uptime checks."""
     return jsonify({"status": "ok"}), 200
 
 
 @app.route("/api/ml/recommend", methods=["POST"])
 def recommend():
+    """Score open gigs against the submitted user skills."""
     try:
         payload = request.get_json(silent=True)
         if payload is None:
@@ -36,6 +39,7 @@ def recommend():
 
 @app.route("/api/moderate", methods=["POST"])
 def moderate():
+    """Run profanity moderation against a submitted text string."""
     try:
         payload = request.get_json(silent=True)
         if payload is None:
@@ -53,18 +57,15 @@ def moderate():
 
 @app.errorhandler(404)
 def not_found(_error):
+    """Return a JSON error for unknown routes."""
     return jsonify({"error": "Route not found"}), 404
 
 
 @app.errorhandler(405)
 def method_not_allowed(_error):
+    """Return a JSON error for unsupported HTTP methods."""
     return jsonify({"error": "Method not allowed"}), 405
 
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5001, debug=True)
-
-
-
-# source venv/Scripts/activate
-# python app.py
