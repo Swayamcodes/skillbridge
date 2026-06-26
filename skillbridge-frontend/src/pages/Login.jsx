@@ -1,11 +1,12 @@
 import { useState, useContext } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/auth';
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useContext(AuthContext);
-  
+
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -35,7 +36,6 @@ const Login = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-white p-4">
       <div className="w-full max-w-md">
-        {/* Logo/Brand */}
         <div className="text-center mb-8">
           <Link to="/" className="inline-block">
             <h1 className="text-2xl font-light tracking-wide mb-2">Skill bridge</h1>
@@ -43,7 +43,6 @@ const Login = () => {
           <p className="text-sm text-gray-500">Student collaboration platform</p>
         </div>
 
-        {/* Login Card */}
         <div className="bg-white rounded-2xl border border-gray-200 shadow-lg p-8">
           <div className="mb-6">
             <h2 className="text-3xl font-light mb-2">Welcome back</h2>
@@ -56,10 +55,16 @@ const Login = () => {
             </div>
           )}
 
+          {location.state?.message && (
+            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-6">
+              <p className="text-emerald-700 text-sm">{location.state.message}</p>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                University Email
+                Verified Email
               </label>
               <input
                 type="email"
@@ -67,9 +72,10 @@ const Login = () => {
                 value={formData.email}
                 onChange={handleChange}
                 className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-                placeholder="your.name@university.edu"
+                placeholder="your.name@example.com"
                 required
               />
+              <p className="text-xs text-gray-500 mt-1">Sign in after confirming the verification link sent to your inbox.</p>
             </div>
 
             <div>
@@ -126,10 +132,9 @@ const Login = () => {
           </div>
         </div>
 
-        {/* Back to Home */}
         <div className="text-center mt-6">
           <Link to="/" className="text-sm text-gray-500 hover:text-gray-700 transition-colors">
-            ← Back to home
+            Back to home
           </Link>
         </div>
       </div>

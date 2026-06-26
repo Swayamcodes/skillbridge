@@ -2,10 +2,12 @@ import { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/auth';
 
+const strongPasswordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
+
 const Signup = () => {
   const navigate = useNavigate();
   const { signup } = useContext(AuthContext);
-  
+
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -24,10 +26,19 @@ const Signup = () => {
     setError('');
     setLoading(true);
 
+    if (!strongPasswordPattern.test(formData.password)) {
+      setError('Use at least 8 characters with uppercase, lowercase, a number, and a special character.');
+      setLoading(false);
+      return;
+    }
+
     try {
       await signup(formData);
-      // Show success message with elegant alert replacement
-      navigate('/login', { state: { message: 'Account created successfully! Please sign in.' } });
+      navigate('/login', {
+        state: {
+          message: 'Account created. Please verify your email before signing in.'
+        }
+      });
     } catch (err) {
       setError(err.response?.data?.message || 'Signup failed');
     } finally {
@@ -38,7 +49,6 @@ const Signup = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-white p-4">
       <div className="w-full max-w-md">
-        {/* Logo/Brand */}
         <div className="text-center mb-8">
           <Link to="/" className="inline-block">
             <h1 className="text-2xl font-light tracking-wide mb-2">Skill bridge</h1>
@@ -46,7 +56,6 @@ const Signup = () => {
           <p className="text-sm text-gray-500">Student collaboration platform</p>
         </div>
 
-        {/* Signup Card */}
         <div className="bg-white rounded-2xl border border-gray-200 shadow-lg p-8">
           <div className="mb-6">
             <h2 className="text-3xl font-light mb-2">Create your account</h2>
@@ -77,7 +86,7 @@ const Signup = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                University Email
+                Email Address
               </label>
               <input
                 type="email"
@@ -85,10 +94,10 @@ const Signup = () => {
                 value={formData.email}
                 onChange={handleChange}
                 className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-                placeholder="your.name@university.edu"
+                placeholder="your.name@example.com"
                 required
               />
-              <p className="text-xs text-gray-500 mt-1">Use your official university email address</p>
+              <p className="text-xs text-gray-500 mt-1">Use an email address you can verify and access.</p>
             </div>
 
             <div>
@@ -118,9 +127,9 @@ const Signup = () => {
                 className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                 placeholder="Create a strong password"
                 required
-                minLength={6}
+                minLength={8}
               />
-              <p className="text-xs text-gray-500 mt-1">Minimum 6 characters</p>
+              <p className="text-xs text-gray-500 mt-1">Use 8+ characters with uppercase, lowercase, a number, and a special character.</p>
             </div>
 
             <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
@@ -161,10 +170,9 @@ const Signup = () => {
           </div>
         </div>
 
-        {/* Back to Home */}
         <div className="text-center mt-6">
           <Link to="/" className="text-sm text-gray-500 hover:text-gray-700 transition-colors">
-            ← Back to home
+            Back to home
           </Link>
         </div>
       </div>

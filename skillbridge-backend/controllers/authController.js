@@ -1,21 +1,33 @@
 import supabase from '../utils/supabase.js';
 
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const strongPasswordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
+
+const isEmailVerified = (user) => Boolean(user?.email_confirmed_at || user?.confirmed_at);
+
 // Signup
 export const signup = async (req, res) => {
   try {
     const { email, password, fullName, college } = req.body;
+    const normalizedEmail = email?.trim().toLowerCase();
 
-    // Validate college email (replace with your college domain)
-    if (!email.endsWith('@gmail.com')) {
+    if (!normalizedEmail || !emailPattern.test(normalizedEmail)) {
       return res.status(400).json({ 
         success: false, 
-        message: 'Please use your college email address' 
+        message: 'Please enter a valid email address' 
+      });
+    }
+
+    if (!strongPasswordPattern.test(password || '')) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be at least 8 characters and include uppercase, lowercase, number, and special character'
       });
     }
 
     // Create auth user
     const { data: authData, error: authError } = await supabase.auth.signUp({
-      email,
+      email: normalizedEmail,
       password,
     });
 
@@ -26,7 +38,7 @@ export const signup = async (req, res) => {
       .from('profiles')
       .insert([{
         user_id: authData.user.id,
-        email: email,
+        email: normalizedEmail,
         full_name: fullName,
         college: college,
       }])
@@ -37,7 +49,7 @@ export const signup = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: 'Account created successfully',
+      message: 'Account created successfully. Please verify your email before signing in.',
       user: authData.user,
       profile: profileData
     });
@@ -51,13 +63,21 @@ export const signup = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+    const normalizedEmail = email?.trim().toLowerCase();
 
     const { data, error } = await supabase.auth.signInWithPassword({
-      email,
+      email: normalizedEmail,
       password,
     });
 
     if (error) throw error;
+
+    if (!isEmailVerified(data.user)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Please verify your email address before signing in'
+      });
+    }
 
     // Get profile
     const { data: profile } = await supabase
