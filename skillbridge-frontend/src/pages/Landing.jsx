@@ -72,7 +72,15 @@ const Landing = () => {
 
       {/* Hero Section */}
       <div className="relative overflow-hidden bg-gradient-to-b from-gray-50 via-white to-white px-6 pb-24 pt-36 sm:pb-28 sm:pt-40">
-        <div className="pointer-events-none absolute inset-x-0 top-0 mx-auto h-80 max-w-5xl bg-gradient-to-b from-emerald-50/80 to-transparent blur-3xl" />
+        <div
+          className="pointer-events-none absolute inset-0 z-0"
+          style={{
+            backgroundImage: `
+              radial-gradient(circle 600px at 0% 200px, #bbf7d0, transparent),
+              radial-gradient(circle 600px at 100% 200px, #bbf7d0, transparent)
+            `,
+          }}
+        />
         <div className="relative mx-auto max-w-5xl text-center">
           <p className="mb-7 text-xs font-medium uppercase tracking-[0.22em] text-emerald-700 sm:text-sm">
             A Human-Centered Campus Economy
@@ -121,11 +129,11 @@ const Landing = () => {
       {/* Success Stories Section */}
       <section
         id="success-stories"
-        className="relative overflow-hidden border-t border-emerald-800 bg-emerald-950 px-6 py-16 sm:py-20 lg:py-22"
+        className="relative overflow-hidden border-t border-emerald-800 bg-emerald-900 px-6 py-16 sm:py-20 lg:py-22"
       >
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -left-32 top-10 h-80 w-80 rounded-full bg-emerald-700/20 blur-3xl" />
-          <div className="absolute -right-24 bottom-0 h-96 w-96 rounded-full bg-emerald-800/25 blur-3xl" />
+          <div className="absolute -left-32 top-10 h-80 w-80 rounded-full bg-emerald-600/15 blur-3xl" />
+          <div className="absolute -right-24 bottom-0 h-96 w-96 rounded-full bg-emerald-700/20 blur-3xl" />
           <div
             className="absolute inset-0 opacity-[0.055]"
             style={{
@@ -262,7 +270,7 @@ const Landing = () => {
                     Highlight
                   </p>
                   <p className="mt-1 text-xl font-semibold">
-                    4,200 Credits Earned
+                    420 Credits Earned
                   </p>
                 </div>
               </div>

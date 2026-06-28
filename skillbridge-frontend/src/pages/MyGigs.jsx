@@ -1,6 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/auth';
+import Avatar from '../components/Avatar';
 import { GigCardSkeleton } from '../components/Skeletons';
 import Navbar from '../components/Navbar';
 import api from '../services/api';
@@ -10,6 +11,7 @@ const MyGigs = () => {
   const [activeTab, setActiveTab] = useState('posted');
   const [postedGigs, setPostedGigs] = useState([]);
   const [assignedGigs, setAssignedGigs] = useState([]);
+  const [unreadCountsByGig, setUnreadCountsByGig] = useState({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,6 +26,18 @@ const MyGigs = () => {
       ]);
       setPostedGigs(postedRes.data.gigs);
       setAssignedGigs(assignedRes.data.gigs);
+
+      try {
+        const conversationsRes = await api.get('/api/chat/conversations');
+        setUnreadCountsByGig(
+          (conversationsRes.data.conversations || []).reduce((counts, conversation) => ({
+            ...counts,
+            [conversation.gig_id]: conversation.unread_count || 0
+          }), {})
+        );
+      } catch (chatError) {
+        console.error('Error fetching chat unread counts:', chatError);
+      }
     } catch (error) {
       console.error('Error fetching gigs:', error);
     } finally {
@@ -57,6 +71,7 @@ const MyGigs = () => {
 
   const GigCard = ({ gig, isPosted }) => {
     const statusBadge = getStatusBadge(gig.status);
+    const unreadCount = unreadCountsByGig[gig.id] || 0;
     
     return (
       <div className="bg-white rounded-xl border border-gray-200 p-6 hover:border-emerald-300 hover:shadow-lg transition-all">
@@ -92,15 +107,31 @@ const MyGigs = () => {
 
         {isPosted && gig.assigned_to && (
           <div className="mb-3 flex items-center gap-2 text-sm text-gray-600">
-            <span>👤</span>
-            <span>Assigned to: <span className="font-medium text-gray-900">{gig.assigned?.full_name}</span></span>
+            <Avatar profile={gig.assigned} size="sm" className="h-8 w-8 text-sm" />
+            <span>
+              Assigned to:{' '}
+              <Link
+                to={`/profile/${gig.assigned?.id}`}
+                className="font-medium text-gray-900 hover:text-emerald-700 hover:underline"
+              >
+                {gig.assigned?.full_name}
+              </Link>
+            </span>
           </div>
         )}
 
         {!isPosted && gig.creator && (
           <div className="mb-3 flex items-center gap-2 text-sm text-gray-600">
-            <span>👤</span>
-            <span>Posted by: <span className="font-medium text-gray-900">{gig.creator?.full_name}</span></span>
+            <Avatar profile={gig.creator} size="sm" className="h-8 w-8 text-sm" />
+            <span>
+              Posted by:{' '}
+              <Link
+                to={`/profile/${gig.creator?.id}`}
+                className="font-medium text-gray-900 hover:text-emerald-700 hover:underline"
+              >
+                {gig.creator?.full_name}
+              </Link>
+            </span>
           </div>
         )}
 
@@ -126,6 +157,20 @@ const MyGigs = () => {
           >
             View Details
           </Link>
+          {gig.status === 'assigned' && (
+            <Link
+              to="/messages"
+              state={{ gigId: gig.id }}
+              className="relative flex-1 text-center border border-emerald-700 text-emerald-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-50 transition-colors"
+            >
+              Chat
+              {unreadCount > 0 && (
+                <span className="absolute -right-2 -top-2 min-w-5 rounded-full bg-red-600 px-1.5 py-0.5 text-xs font-medium text-white">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </Link>
+          )}
           {isPosted && gig.status === 'assigned' && (
             <button
               type="button"

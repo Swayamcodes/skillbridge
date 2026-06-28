@@ -13,6 +13,7 @@ import ProfileEdit from './pages/ProfileEdit';
 import Gigs from './pages/Gigs';
 import PostGig from './pages/PostGig';
 import GigDetail from './pages/GigDetail';
+import Messages from './pages/Messages';
 import MyApplications from './pages/MyApplications';
 import GigApplicants from './pages/GigApplicants';
 import MyGigs from './pages/MyGigs';
@@ -113,6 +114,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <GigApplicants />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/messages" 
+            element={
+              <ProtectedRoute>
+                <Messages />
               </ProtectedRoute>
             } 
           />

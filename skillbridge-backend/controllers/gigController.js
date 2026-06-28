@@ -2,6 +2,7 @@ import axios from 'axios';
 import supabase from '../utils/supabase.js';
 import { getPaginationMeta, getPaginationParams } from '../utils/pagination.js';
 import { checkFraudRules } from './fraudController.js';
+import { adjustProfileCredits } from '../utils/credits.js';
 
 const MODERATION_SERVICE_URL = 'http://localhost:5001/api/moderate';
 
@@ -95,7 +96,7 @@ export const getAllGigs = async (req, res) => {
       .from('gigs')
       .select(`
         *,
-        creator:profiles!gigs_creator_id_fkey(id, full_name, email, college)
+        creator:profiles!gigs_creator_id_fkey(id, full_name, email, college, avatar_url)
       `, { count: 'exact' })
       .eq('status', 'open')
       .order('created_at', { ascending: false })
@@ -121,7 +122,7 @@ export const getGigById = async (req, res) => {
       .from('gigs')
       .select(`
         *,
-        creator:profiles!gigs_creator_id_fkey(id, full_name, email, college, skills, reputation_score)
+        creator:profiles!gigs_creator_id_fkey(id, full_name, email, college, skills, reputation_score, avatar_url)
       `)
       .eq('id', id)
       .single();
@@ -264,7 +265,7 @@ export const getGigApplicants = async (req, res) => {
       .from('applications')
       .select(`
         *,
-        applicant:profiles!applications_applicant_id_fkey(id, full_name, email, college, year, skills, reputation_score)
+        applicant:profiles!applications_applicant_id_fkey(id, full_name, email, college, year, skills, reputation_score, avatar_url)
       `)
       .eq('gig_id', id)
       .order('created_at', { ascending: false });
@@ -290,7 +291,7 @@ export const getMyPostedGigs = async (req, res) => {
       .from('gigs')
       .select(`
         *,
-        assigned:profiles!gigs_assigned_to_fkey(id, full_name, email)
+        assigned:profiles!gigs_assigned_to_fkey(id, full_name, email, avatar_url)
       `)
       .eq('creator_id', profile.id)
       .order('created_at', { ascending: false });
@@ -317,7 +318,7 @@ export const getMyAssignedGigs = async (req, res) => {
       .from('gigs')
       .select(`
         *,
-        creator:profiles!gigs_creator_id_fkey(id, full_name, email, college)
+        creator:profiles!gigs_creator_id_fkey(id, full_name, email, college, avatar_url)
       `)
       .eq('assigned_to', profile.id)
       .order('created_at', { ascending: false });
@@ -338,6 +339,7 @@ export const completeGig = async (req, res) => {
     transactionStatusBeforeUpdate: null,
     gigStatusBeforeUpdate: null,
     freelancerCreditUpdated: false,
+    freelancerCreditDelta: null,
     originalFreelancerCredits: null,
     freelancerWalletUpdated: false,
     originalWalletBalance: null,
@@ -462,28 +464,21 @@ export const completeGig = async (req, res) => {
         credits: transaction.credits
       });
 
-      const { data: freelancer, error: freelancerError } = await supabase
-        .from('profiles')
-        .select('credits')
-        .eq('id', transaction.freelancer_id)
-        .single();
-      if (freelancerError) throw freelancerError;
+      const creditAdjustment = await adjustProfileCredits(supabase, {
+        profileId: transaction.freelancer_id,
+        delta: transaction.credits
+      });
 
-      rollbackState.originalFreelancerCredits = freelancer.credits;
-
-      const { error: updateCreditsError } = await supabase
-        .from('profiles')
-        .update({
-          credits: Number(freelancer.credits || 0) + Number(transaction.credits || 0)
-        })
-        .eq('id', transaction.freelancer_id);
-      if (updateCreditsError) throw updateCreditsError;
+      rollbackState.originalFreelancerCredits = creditAdjustment.previousCredits;
+      rollbackState.freelancerCreditDelta = Number(transaction.credits || 0);
       rollbackState.freelancerCreditUpdated = true;
 
       console.log('Complete gig updated freelancer credits:', {
         freelancer_id: transaction.freelancer_id,
-        previous_credits: freelancer.credits,
-        added_credits: transaction.credits
+        previous_credits: creditAdjustment.previousCredits,
+        added_credits: transaction.credits,
+        next_credits: creditAdjustment.nextCredits,
+        attempts: creditAdjustment.attempts
       });
 
       const { data: creditLedger, error: creditLedgerError } = await supabase
@@ -674,13 +669,13 @@ export const completeGig = async (req, res) => {
       }
 
       if (rollbackState.freelancerCreditUpdated && rollbackState.freelancerId) {
-        await supabase
-          .from('profiles')
-          .update({ credits: rollbackState.originalFreelancerCredits })
-          .eq('id', rollbackState.freelancerId);
+        await adjustProfileCredits(supabase, {
+          profileId: rollbackState.freelancerId,
+          delta: -Number(rollbackState.freelancerCreditDelta || 0)
+        });
         console.warn('Complete gig rollback restored freelancer credits:', {
           freelancer_id: rollbackState.freelancerId,
-          credits: rollbackState.originalFreelancerCredits
+          reversed_delta: -Number(rollbackState.freelancerCreditDelta || 0)
         });
       }
 

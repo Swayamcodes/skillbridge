@@ -1,6 +1,7 @@
 import { useState, useEffect, useContext, useCallback, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { AuthContext } from '../context/auth';
+import Avatar from '../components/Avatar';
 import Navbar from '../components/Navbar';
 import api from '../services/api';
 
@@ -301,12 +302,15 @@ const GigApplicants = () => {
                   <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
                     <div className="flex items-start gap-4 flex-1">
                       {/* Avatar */}
-                      <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 text-xl font-medium flex-shrink-0">
-                        {app.applicant?.full_name?.charAt(0).toUpperCase()}
-                      </div>
+                      <Avatar profile={app.applicant} size="md" />
                       
                       <div className="flex-1">
-                        <h3 className="text-xl font-medium mb-1">{app.applicant?.full_name}</h3>
+                        <Link
+                          to={`/profile/${app.applicant?.id}`}
+                          className="text-xl font-medium mb-1 inline-block hover:text-emerald-700 hover:underline"
+                        >
+                          {app.applicant?.full_name}
+                        </Link>
                         <p className="text-sm text-gray-600 mb-1">{app.applicant?.email}</p>
                         <p className="text-sm text-gray-500">
                           {app.applicant?.college} • Year {app.applicant?.year}

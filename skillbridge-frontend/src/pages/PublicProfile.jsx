@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import Avatar from '../components/Avatar';
 import Navbar from '../components/Navbar';
 import api from '../services/api';
 
@@ -107,9 +108,7 @@ const PublicProfile = () => {
             {/* Profile Avatar & Info */}
             <div className="flex items-start gap-6 -mt-16 mb-8 relative z-10">
               {/* Avatar */}
-              <div className="w-32 h-32 rounded-full bg-white border-4 border-white shadow-lg flex items-center justify-center text-5xl font-light text-emerald-700 flex-shrink-0">
-                {profile?.full_name?.charAt(0).toUpperCase()}
-              </div>
+              <Avatar profile={profile} size="xl" className="bg-white border-4 border-white shadow-lg font-light" />
               
               {/* Name & College */}
               <div className="pt-16">
@@ -218,9 +217,17 @@ const PublicProfile = () => {
               {reviews.map((review) => (
                 <div key={review.id} className="border border-gray-200 rounded-xl p-6 hover:border-emerald-300 transition-colors">
                   <div className="flex justify-between items-start mb-3">
-                    <div>
-                      <p className="font-medium text-gray-900">{review.reviewer?.full_name}</p>
+                    <div className="flex items-center gap-3">
+                      <Avatar profile={review.reviewer} size="sm" />
+                      <div>
+                      <Link
+                        to={`/profile/${review.reviewer?.id}`}
+                        className="font-medium text-gray-900 hover:text-emerald-700 hover:underline"
+                      >
+                        {review.reviewer?.full_name}
+                      </Link>
                       <p className="text-sm text-gray-500">{review.reviewer?.college}</p>
+                      </div>
                     </div>
                     <div className="text-yellow-500 text-lg">
                       {'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}

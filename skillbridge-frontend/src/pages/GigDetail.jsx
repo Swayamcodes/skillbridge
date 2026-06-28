@@ -1,6 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/auth';
+import Avatar from '../components/Avatar';
 import Navbar from '../components/Navbar';
 import api from '../services/api';
 
@@ -14,6 +15,7 @@ const GigDetail = () => {
   const [applying, setApplying] = useState(false);
   const [applicationMessage, setApplicationMessage] = useState('');
   const [error, setError] = useState('');
+  const [chatUnreadCount, setChatUnreadCount] = useState(0);
 
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [rating, setRating] = useState(5);
@@ -28,6 +30,15 @@ const GigDetail = () => {
     try {
       const response = await api.get(`/api/gigs/${id}`);
       setGig(response.data.gig);
+
+      try {
+        const conversationsResponse = await api.get('/api/chat/conversations');
+        const currentConversation = (conversationsResponse.data.conversations || [])
+          .find((conversation) => conversation.gig_id === id);
+        setChatUnreadCount(currentConversation?.unread_count || 0);
+      } catch (chatError) {
+        console.error('Error fetching chat unread count:', chatError);
+      }
     } catch (error) {
       console.error('Error fetching gig:', error);
       setError('Gig not found');
@@ -132,6 +143,12 @@ const GigDetail = () => {
   }
 
   const isCreator = gig?.creator?.id === profile?.id;
+  const chatOtherUserId = isCreator ? gig?.assigned_to : (gig?.creator_id || gig?.creator?.id);
+  const canChat = Boolean(
+    gig?.status === 'assigned'
+    && (isCreator || gig?.assigned_to === profile?.id)
+    && chatOtherUserId
+  );
   const statusBadge = getStatusBadge(gig?.status);
 
   return (
@@ -154,8 +171,9 @@ const GigDetail = () => {
             <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6 mb-6">
               <div className="flex-1">
                 <h1 className="text-3xl font-light mb-3">{gig.title}</h1>
-                <div className="flex items-center gap-2 text-gray-600">
+                <div className="flex flex-wrap items-center gap-2 text-gray-600">
                   <span>Posted by</span>
+                  <Avatar profile={gig.creator} size="sm" className="h-8 w-8 text-sm" />
                   <Link 
                     to={`/profile/${gig.creator?.id}`} 
                     className="font-medium text-emerald-700 hover:text-emerald-800 transition-colors"
@@ -196,6 +214,29 @@ const GigDetail = () => {
                   >
                     View Applicants
                   </Link>
+                </div>
+              </div>
+            )}
+
+            {canChat && (
+              <div className="bg-white border border-gray-200 rounded-lg p-4 mb-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="font-medium text-gray-900">Project chat</p>
+                    <p className="text-sm text-gray-600">Message the other party about this gig.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/messages', { state: { gigId: id, otherUserId: chatOtherUserId } })}
+                    className="relative inline-flex items-center justify-center rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-800"
+                  >
+                    Message
+                    {chatUnreadCount > 0 && (
+                      <span className="absolute -right-2 -top-2 min-w-5 rounded-full bg-red-600 px-1.5 py-0.5 text-xs font-medium text-white">
+                        {chatUnreadCount > 9 ? '9+' : chatUnreadCount}
+                      </span>
+                    )}
+                  </button>
                 </div>
               </div>
             )}

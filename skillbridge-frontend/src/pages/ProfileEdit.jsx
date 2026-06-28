@@ -1,18 +1,23 @@
 import { useState, useEffect, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/auth';
+import Avatar from '../components/Avatar';
 import Navbar from '../components/Navbar';
 import api from '../services/api';
 
 const ProfileEdit = () => {
   const navigate = useNavigate();
-  const { profile: authProfile } = useContext(AuthContext);
+  const { profile: authProfile, refreshProfile } = useContext(AuthContext);
   
   const [formData, setFormData] = useState({
     skills: '',
     bio: '',
     year: ''
   });
+  const [profile, setProfile] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState('');
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarMessage, setAvatarMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -25,6 +30,8 @@ const ProfileEdit = () => {
     try {
       const response = await api.get(`/api/profiles/${authProfile.id}`);
       const profile = response.data.profile;
+      setProfile(profile);
+      setAvatarPreview(profile.avatar_url || '');
       setFormData({
         skills: profile.skills ? profile.skills.join(', ') : '',
         bio: profile.bio || '',
@@ -40,6 +47,42 @@ const ProfileEdit = () => {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleAvatarChange = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploadingAvatar(true);
+    setAvatarMessage('');
+    setError('');
+
+    const previewUrl = URL.createObjectURL(file);
+    setAvatarPreview(previewUrl);
+
+    try {
+      const formData = new FormData();
+      formData.append('avatar', file);
+
+      const response = await api.post('/api/profiles/upload-avatar', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      const avatarUrl = response.data.avatar_url;
+      setAvatarPreview(avatarUrl);
+      setProfile((currentProfile) => ({ ...currentProfile, avatar_url: avatarUrl }));
+      setAvatarMessage('Profile photo updated successfully.');
+      refreshProfile?.();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to upload profile photo');
+      setAvatarPreview(profile?.avatar_url || '');
+    } finally {
+      URL.revokeObjectURL(previewUrl);
+      setUploadingAvatar(false);
+      event.target.value = '';
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -100,6 +143,33 @@ const ProfileEdit = () => {
               <p className="text-red-700 text-sm">{error}</p>
             </div>
           )}
+
+          {avatarMessage && (
+            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-6">
+              <p className="text-emerald-700 text-sm">{avatarMessage}</p>
+            </div>
+          )}
+
+          <div className="mb-8 flex flex-col items-center gap-3 border-b border-gray-200 pb-8">
+            <div className="relative">
+              <Avatar
+                profile={{ ...profile, avatar_url: avatarPreview }}
+                size="xl"
+                className="border-4 border-white shadow-lg"
+              />
+              <label className="absolute bottom-2 right-2 cursor-pointer rounded-full bg-emerald-700 px-4 py-2 text-xs font-medium text-white shadow-md transition-colors hover:bg-emerald-800">
+                {uploadingAvatar ? 'Uploading...' : 'Change Photo'}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  disabled={uploadingAvatar}
+                  className="sr-only"
+                />
+              </label>
+            </div>
+            <p className="text-sm text-gray-600">Upload a clear profile photo.</p>
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Skills */}

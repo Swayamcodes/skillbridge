@@ -120,7 +120,7 @@ export const getUserReviews = async (req, res) => {
       .from('reviews')
       .select(`
         *,
-        reviewer:profiles!reviews_reviewer_id_fkey(id, full_name, college),
+        reviewer:profiles!reviews_reviewer_id_fkey(id, full_name, college, avatar_url),
         transaction:transactions(gig:gigs(title))
       `)
       .eq('reviewee_id', userId)

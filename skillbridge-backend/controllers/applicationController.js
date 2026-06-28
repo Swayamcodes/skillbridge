@@ -1,6 +1,7 @@
 import supabase from '../utils/supabase.js';
 import { getPaginationMeta, getPaginationParams } from '../utils/pagination.js';
 import { checkFraudRules } from './fraudController.js';
+import { adjustProfileCredits } from '../utils/credits.js';
 
 export const getMyApplications = async (req, res) => {
   try {
@@ -61,7 +62,7 @@ export const getGigApplicants = async (req, res) => {
       .from('applications')
       .select(`
         *,
-        applicant:profiles!applications_applicant_id_fkey(id, full_name, email, college, year, skills, reputation_score)
+        applicant:profiles!applications_applicant_id_fkey(id, full_name, email, college, year, skills, reputation_score, avatar_url)
       `)
       .eq('gig_id', gigId)
       .order('created_at', { ascending: false });
@@ -81,6 +82,7 @@ export const acceptApplication = async (req, res) => {
     applicationId: null,
     creatorId: null,
     creditsDeducted: false,
+    creditDelta: null,
     originalCredits: null,
     creditLedgerId: null,
     transactionId: null,
@@ -244,15 +246,42 @@ export const acceptApplication = async (req, res) => {
 
     // If barter, check creator has enough credits
     if (application.gig.type === 'barter') {
-      const { data: creatorProfile, error: creatorProfileError } = await db
-        .from('profiles')
-        .select('credits')
-        .eq('id', application.gig.creator_id)
-        .single();
+      let creditAdjustment;
 
-      if (creatorProfileError) throw creatorProfileError;
+      try {
+        creditAdjustment = await adjustProfileCredits(db, {
+          profileId: application.gig.creator_id,
+          delta: -Number(application.gig.credits || 0),
+          minCredits: 0
+        });
+      } catch (creditError) {
+        if (creditError.code === 'INSUFFICIENT_CREDITS') {
+          console.warn('Accept application rejected for insufficient credits:', {
+            trace_id: traceId,
+            gig_id: application.gig.id,
+            application_id: id,
+            creator_id: application.gig.creator_id,
+            previous_credits: creditError.previousCredits,
+            attempted_next_credits: creditError.nextCredits,
+            required_credits: application.gig.credits
+          });
 
-      if (creatorProfile.credits < application.gig.credits) {
+          await db
+            .from('applications')
+            .update({ status: 'pending' })
+            .eq('id', id);
+          rollbackState.applicationAccepted = false;
+
+          return res.status(400).json({
+            success: false,
+            message: 'Insufficient credits'
+          });
+        }
+
+        throw creditError;
+      }
+
+      if (!creditAdjustment) {
         await db
           .from('applications')
           .update({ status: 'pending' })
@@ -265,17 +294,20 @@ export const acceptApplication = async (req, res) => {
         });
       }
 
-      rollbackState.originalCredits = creatorProfile.credits;
-
-      // Deduct credits from creator (lock in escrow)
-      const { error: deductCreditsError } = await db
-        .from('profiles')
-        .update({ 
-          credits: creatorProfile.credits - application.gig.credits 
-        })
-        .eq('id', application.gig.creator_id);
-      if (deductCreditsError) throw deductCreditsError;
+      rollbackState.originalCredits = creditAdjustment.previousCredits;
+      rollbackState.creditDelta = -Number(application.gig.credits || 0);
       rollbackState.creditsDeducted = true;
+
+      console.log('Accept application deducting creator credits:', {
+        trace_id: traceId,
+        gig_id: application.gig.id,
+        application_id: id,
+        creator_id: application.gig.creator_id,
+        previous_credits: creditAdjustment.previousCredits,
+        deducted_credits: application.gig.credits,
+        next_credits: creditAdjustment.nextCredits,
+        attempts: creditAdjustment.attempts
+      });
 
       // Log credit transaction
       const { data: creditLedger, error: creditLedgerError } = await db
@@ -434,10 +466,10 @@ export const acceptApplication = async (req, res) => {
       }
 
       if (rollbackState.creditsDeducted && rollbackState.creatorId) {
-        await db
-          .from('profiles')
-          .update({ credits: rollbackState.originalCredits })
-          .eq('id', rollbackState.creatorId);
+        await adjustProfileCredits(db, {
+          profileId: rollbackState.creatorId,
+          delta: -Number(rollbackState.creditDelta || 0)
+        });
       }
     } catch (rollbackError) {
       console.error('Accept application rollback error:', rollbackError);

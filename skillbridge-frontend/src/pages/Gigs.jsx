@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import Avatar from '../components/Avatar';
 import Pagination from '../components/Pagination';
 import { GigCardSkeleton } from '../components/Skeletons';
 import Navbar from '../components/Navbar';
@@ -306,15 +307,17 @@ const Gigs = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredAndSortedGigs.map((gig) => (
-              <Link
+              <div
                 key={gig.id}
-                to={`/gigs/${gig.id}`}
                 className="bg-white rounded-xl border border-gray-200 p-6 hover:border-emerald-500 hover:shadow-lg transition-all group"
               >
                 <div className="flex items-start justify-between mb-3">
-                  <h3 className="text-xl font-medium group-hover:text-emerald-700 transition-colors line-clamp-2 flex-1">
+                  <Link
+                    to={`/gigs/${gig.id}`}
+                    className="text-xl font-medium group-hover:text-emerald-700 transition-colors line-clamp-2 flex-1"
+                  >
                     {gig.title}
-                  </h3>
+                  </Link>
                   {gig.type === 'paid' ? (
                     <span className="bg-emerald-700 text-white px-3 py-1 rounded-full text-sm font-medium flex-shrink-0 ml-2">
                       ₹{gig.price}
@@ -350,14 +353,17 @@ const Gigs = () => {
 
                 <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 text-sm font-medium">
-                      {gig.creator?.full_name?.charAt(0).toUpperCase()}
-                    </div>
-                    <span className="text-sm text-gray-600">{gig.creator?.full_name}</span>
+                    <Avatar profile={gig.creator} size="sm" className="w-8 h-8 text-sm" />
+                    <Link
+                      to={`/profile/${gig.creator?.id}`}
+                      className="text-sm text-gray-600 hover:text-emerald-700 hover:underline"
+                    >
+                      {gig.creator?.full_name}
+                    </Link>
                   </div>
                   <span className="text-emerald-700 group-hover:translate-x-1 transition-transform">→</span>
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
         )}

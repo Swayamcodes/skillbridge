@@ -6,7 +6,7 @@ export const getProfile = async (req, res) => {
 
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, full_name, college, year, bio, skills, reputation_score, avatar_url')
+      .select('id, full_name, email, college, year, bio, skills, reputation_score, avatar_url, credits')
       .eq('id', id)
       .single();
 
@@ -57,6 +57,51 @@ export const updateProfile = async (req, res) => {
 
     res.json({ success: true, profile: data });
   } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const uploadAvatar = async (req, res) => {
+  try {
+    const db = req.supabase || supabase;
+    const file = req.file;
+
+    if (!file) {
+      return res.status(400).json({ success: false, message: 'Image file is required' });
+    }
+
+    if (!file.mimetype?.startsWith('image/')) {
+      return res.status(400).json({ success: false, message: 'Only image files are allowed' });
+    }
+
+    const extension = file.originalname?.split('.').pop()?.toLowerCase() || 'jpg';
+    const filePath = `${req.user.id}/${Date.now()}.${extension}`;
+
+    const { error: uploadError } = await db.storage
+      .from('avatars')
+      .upload(filePath, file.buffer, {
+        contentType: file.mimetype,
+        upsert: true
+      });
+
+    if (uploadError) throw uploadError;
+
+    const { data: publicUrlData } = db.storage
+      .from('avatars')
+      .getPublicUrl(filePath);
+
+    const avatarUrl = publicUrlData.publicUrl;
+
+    const { error: updateError } = await db
+      .from('profiles')
+      .update({ avatar_url: avatarUrl })
+      .eq('user_id', req.user.id);
+
+    if (updateError) throw updateError;
+
+    res.json({ success: true, avatar_url: avatarUrl });
+  } catch (error) {
+    console.error('Upload avatar error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

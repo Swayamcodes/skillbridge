@@ -82,6 +82,11 @@ const NotificationBell = () => {
     }
 
     setIsOpen(false);
+    if (notification.type === 'new_message' && notification.link) {
+      navigate(notification.link);
+      return;
+    }
+
     if (notification.link) navigate(notification.link);
   };
 

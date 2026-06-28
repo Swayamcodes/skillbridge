@@ -15,16 +15,19 @@ const Home = () => {
     total_credits_earned: 0,
     total_money_earned: 0
   });
+  const [unreadMessages, setUnreadMessages] = useState(0);
 
   useEffect(() => {
     fetchRecommendations();
     fetchUserStats();
+    fetchUnreadMessages();
     refreshProfile?.();
   }, []);
 
   useEffect(() => {
     const refreshStats = () => {
       fetchUserStats();
+      fetchUnreadMessages();
       refreshProfile?.();
     };
 
@@ -66,6 +69,17 @@ const Home = () => {
       setStats(response.data.stats || {});
     } catch (error) {
       console.error('Error fetching user stats:', error);
+    }
+  };
+
+  const fetchUnreadMessages = async () => {
+    try {
+      const response = await api.get('/api/chat/conversations');
+      const totalUnread = (response.data.conversations || [])
+        .reduce((total, conversation) => total + (conversation.unread_count || 0), 0);
+      setUnreadMessages(totalUnread);
+    } catch (error) {
+      console.error('Error fetching unread messages:', error);
     }
   };
 
@@ -212,6 +226,22 @@ const Home = () => {
               </div>
               <h4 className="text-lg font-medium mb-2">My Applications</h4>
               <p className="text-sm text-gray-600">Track your submitted proposals</p>
+            </Link>
+
+            <Link
+              to="/messages"
+              className="relative bg-white rounded-xl border border-gray-200 p-6 hover:border-emerald-500 hover:shadow-lg transition-all group"
+            >
+              {unreadMessages > 0 && (
+                <span className="absolute right-5 top-5 min-w-5 rounded-full bg-red-600 px-1.5 py-0.5 text-center text-xs font-medium text-white">
+                  {unreadMessages > 99 ? '99+' : unreadMessages}
+                </span>
+              )}
+              <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center mb-4 group-hover:bg-emerald-200 transition-colors">
+                <span className="text-2xl">M</span>
+              </div>
+              <h4 className="text-lg font-medium mb-2">Messages</h4>
+              <p className="text-sm text-gray-600">Chat about your active gigs</p>
             </Link>
 
             <Link
