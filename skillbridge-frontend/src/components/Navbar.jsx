@@ -1,6 +1,7 @@
 import { useContext, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/auth';
+import Logo from './Logo';
 import NotificationBell from './NotificationBell';
 import api from '../services/api';
 
@@ -33,9 +34,7 @@ const Navbar = ({ showCredits = false, action }) => {
   return (
     <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center gap-4">
-        <Link to="/dashboard" className="text-xl font-light tracking-wide shrink-0">
-          Skill bridge
-        </Link>
+        <Logo size="md" />
 
         <div className="flex items-center justify-end gap-2 sm:gap-4">
           <Link

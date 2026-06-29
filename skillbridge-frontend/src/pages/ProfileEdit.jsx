@@ -5,6 +5,16 @@ import Avatar from '../components/Avatar';
 import Navbar from '../components/Navbar';
 import api from '../services/api';
 
+const categories = [
+  'Web Development',
+  'Design',
+  'Tutoring',
+  'Content Writing',
+  'Mobile Development',
+  'Data Science',
+  'Other'
+];
+
 const ProfileEdit = () => {
   const navigate = useNavigate();
   const { profile: authProfile, refreshProfile } = useContext(AuthContext);
@@ -12,7 +22,16 @@ const ProfileEdit = () => {
   const [formData, setFormData] = useState({
     skills: '',
     bio: '',
-    year: ''
+    year: '',
+    availability_status: 'available',
+    category: '',
+    portfolio_links: [],
+    social_links: {
+      linkedin: '',
+      github: '',
+      instagram: ''
+    },
+    phone_number: ''
   });
   const [profile, setProfile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState('');
@@ -35,7 +54,16 @@ const ProfileEdit = () => {
       setFormData({
         skills: profile.skills ? profile.skills.join(', ') : '',
         bio: profile.bio || '',
-        year: profile.year || ''
+        year: profile.year || '',
+        availability_status: profile.availability_status || 'available',
+        category: profile.category || '',
+        portfolio_links: Array.isArray(profile.portfolio_links) ? profile.portfolio_links : [],
+        social_links: {
+          linkedin: profile.social_links?.linkedin || '',
+          github: profile.social_links?.github || '',
+          instagram: profile.social_links?.instagram || ''
+        },
+        phone_number: profile.phone_number || ''
       });
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -47,6 +75,39 @@ const ProfileEdit = () => {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handlePortfolioChange = (index, field, value) => {
+    setFormData((currentData) => ({
+      ...currentData,
+      portfolio_links: currentData.portfolio_links.map((link, linkIndex) => (
+        linkIndex === index ? { ...link, [field]: value } : link
+      ))
+    }));
+  };
+
+  const addPortfolioLink = () => {
+    setFormData((currentData) => ({
+      ...currentData,
+      portfolio_links: [...currentData.portfolio_links, { title: '', url: '' }]
+    }));
+  };
+
+  const removePortfolioLink = (index) => {
+    setFormData((currentData) => ({
+      ...currentData,
+      portfolio_links: currentData.portfolio_links.filter((_, linkIndex) => linkIndex !== index)
+    }));
+  };
+
+  const handleSocialChange = (field, value) => {
+    setFormData((currentData) => ({
+      ...currentData,
+      social_links: {
+        ...currentData.social_links,
+        [field]: value
+      }
+    }));
   };
 
   const handleAvatarChange = async (event) => {
@@ -92,11 +153,32 @@ const ProfileEdit = () => {
 
     try {
       const skillsArray = formData.skills.split(',').map(s => s.trim()).filter(s => s);
+      const cleanedPortfolioLinks = formData.portfolio_links
+        .map((link) => ({
+          title: link.title.trim(),
+          url: link.url.trim()
+        }))
+        .filter((link) => link.title && link.url);
+
+      if (formData.phone_number && !/^[0-9]{7,15}$/.test(formData.phone_number)) {
+        setError('Phone number must contain 7 to 15 digits only');
+        setSaving(false);
+        return;
+      }
       
       await api.put(`/api/profiles/${authProfile.id}`, {
         skills: skillsArray,
         bio: formData.bio,
-        year: parseInt(formData.year)
+        year: formData.year ? parseInt(formData.year) : null,
+        availability_status: formData.availability_status,
+        category: formData.category,
+        portfolio_links: cleanedPortfolioLinks,
+        social_links: {
+          linkedin: formData.social_links.linkedin.trim(),
+          github: formData.social_links.github.trim(),
+          instagram: formData.social_links.instagram.trim()
+        },
+        phone_number: formData.phone_number.trim()
       });
 
       navigate('/profile', { state: { message: 'Profile updated successfully!' } });
@@ -172,6 +254,41 @@ const ProfileEdit = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Availability */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Availability
+              </label>
+              <select
+                name="availability_status"
+                value={formData.availability_status}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+              >
+                <option value="available">Available</option>
+                <option value="busy">Busy</option>
+                <option value="unavailable">Not Available</option>
+              </select>
+            </div>
+
+            {/* Category */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Category
+              </label>
+              <select
+                name="category"
+                value={formData.category}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+              >
+                <option value="">Select Category</option>
+                {categories.map((category) => (
+                  <option key={category} value={category}>{category}</option>
+                ))}
+              </select>
+            </div>
+
             {/* Skills */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -207,6 +324,25 @@ const ProfileEdit = () => {
               </select>
             </div>
 
+            {/* Phone Number */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Phone Number
+              </label>
+              <input
+                type="text"
+                name="phone_number"
+                value={formData.phone_number}
+                onChange={(event) => {
+                  const value = event.target.value.replace(/\D/g, '').slice(0, 15);
+                  setFormData({ ...formData, phone_number: value });
+                }}
+                placeholder="Optional"
+                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+              />
+              <p className="text-xs text-gray-500 mt-1">Only visible to you and people you have active gigs with</p>
+            </div>
+
             {/* Bio */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -223,6 +359,86 @@ const ProfileEdit = () => {
               <p className="text-xs text-gray-500 mt-1">
                 A good bio helps others understand your background and expertise
               </p>
+            </div>
+
+            {/* Portfolio Links */}
+            <div>
+              <div className="flex items-center justify-between gap-4 mb-3">
+                <label className="block text-sm font-medium text-gray-700">
+                  Portfolio Links
+                </label>
+                <button
+                  type="button"
+                  onClick={addPortfolioLink}
+                  className="text-sm text-emerald-700 hover:text-emerald-800 transition-colors"
+                >
+                  Add Link
+                </button>
+              </div>
+
+              {formData.portfolio_links.length === 0 ? (
+                <div className="border border-dashed border-gray-300 rounded-lg p-4 text-sm text-gray-500">
+                  Add GitHub, Behance, portfolio, or project links.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {formData.portfolio_links.map((link, index) => (
+                    <div key={index} className="grid grid-cols-1 md:grid-cols-[1fr_1.5fr_auto] gap-3">
+                      <input
+                        type="text"
+                        value={link.title}
+                        onChange={(event) => handlePortfolioChange(index, 'title', event.target.value)}
+                        placeholder="Title"
+                        className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                      />
+                      <input
+                        type="url"
+                        value={link.url}
+                        onChange={(event) => handlePortfolioChange(index, 'url', event.target.value)}
+                        placeholder="https://example.com"
+                        className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removePortfolioLink(index)}
+                        className="border border-gray-300 px-4 py-3 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        X
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Social Links */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Social Links
+              </label>
+              <div className="space-y-3">
+                <input
+                  type="url"
+                  value={formData.social_links.linkedin}
+                  onChange={(event) => handleSocialChange('linkedin', event.target.value)}
+                  placeholder="LinkedIn URL"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                />
+                <input
+                  type="url"
+                  value={formData.social_links.github}
+                  onChange={(event) => handleSocialChange('github', event.target.value)}
+                  placeholder="GitHub URL"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                />
+                <input
+                  type="url"
+                  value={formData.social_links.instagram}
+                  onChange={(event) => handleSocialChange('instagram', event.target.value)}
+                  placeholder="Instagram URL"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                />
+              </div>
             </div>
 
             {/* Submit Buttons */}

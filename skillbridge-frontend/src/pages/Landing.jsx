@@ -8,7 +8,7 @@ import {
   ShieldCheck,
   Users,
 } from 'lucide-react';
-import skillbridgeLogo from '../assets/skillbridge_logo.png';
+import Logo from '../components/Logo';
 import userGroup from '../assets/user_group.png';
 
 const Landing = () => {
@@ -34,13 +34,7 @@ const Landing = () => {
       {/* Sticky Navbar */}
       <nav className={`fixed top-0 left-0 right-0 bg-white z-50 transition-shadow ${scrolled ? 'border-b border-gray-200' : ''}`}>
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <Link to="/" aria-label="Skill Bridge home" className="h-7 flex items-center">
-            <img
-              src={skillbridgeLogo}
-              alt="Skill Bridge"
-              className="h-14 w-auto max-w-none object-contain"
-            />
-          </Link>
+          <Logo size="md" />
           <div className="flex gap-8 items-center">
             <button 
               onClick={() => scrollToSection('success-stories')}
@@ -501,7 +495,9 @@ const Landing = () => {
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
             <div>
-              <h3 className="text-xl font-light mb-6">Skill bridge</h3>
+              <div className="mb-6">
+                <Logo size="sm" />
+              </div>
               <p className="text-sm text-gray-600 leading-relaxed">
                 Designed for students. By students. Join an ecosystem built to connect classroom knowledge into community value.
               </p>

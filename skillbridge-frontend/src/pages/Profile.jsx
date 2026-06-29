@@ -2,6 +2,7 @@ import { useState, useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/auth';
 import Avatar from '../components/Avatar';
+import ProfileFreelancerFields, { AvailabilityBadge } from '../components/ProfileFreelancerFields';
 import { ProfileSkeleton } from '../components/Skeletons';
 import Navbar from '../components/Navbar';
 import api from '../services/api';
@@ -112,7 +113,10 @@ const Profile = () => {
               
               {/* Name & College */}
               <div className="pt-16">
-                <h1 className="text-3xl font-light mb-2">{profile?.full_name}</h1>
+                <div className="mb-2 flex flex-wrap items-center gap-3">
+                  <h1 className="text-3xl font-light">{profile?.full_name}</h1>
+                  <AvailabilityBadge status={profile?.availability_status} />
+                </div>
                 <p className="text-gray-600 text-lg">{profile?.college}</p>
                 <p className="text-sm text-gray-500">Year {profile?.year}</p>
               </div>
@@ -177,6 +181,11 @@ const Profile = () => {
                 <span>⚡</span> Skills
               </h3>
               <div className="flex flex-wrap gap-2">
+                {profile?.category && (
+                  <span className="bg-gray-900 text-white px-4 py-2 rounded-full text-sm border border-gray-900">
+                    {profile.category}
+                  </span>
+                )}
                 {profile?.skills && profile.skills.length > 0 ? (
                   profile.skills.map((skill, index) => (
                     <span
@@ -190,6 +199,10 @@ const Profile = () => {
                   <p className="text-gray-500 text-sm">No skills added yet. Click "Edit Profile" to add your skills.</p>
                 )}
               </div>
+            </div>
+
+            <div className="mt-6">
+              <ProfileFreelancerFields profile={profile} />
             </div>
           </div>
         </div>

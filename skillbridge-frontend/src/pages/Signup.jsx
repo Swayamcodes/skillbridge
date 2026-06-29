@@ -1,6 +1,7 @@
 import { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/auth';
+import Logo from '../components/Logo';
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -36,13 +37,12 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-white p-4">
+    <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-white p-4">
+      <div className="absolute left-6 top-6 sm:left-8 sm:top-8">
+        <Logo size="lg" />
+      </div>
       <div className="w-full max-w-md">
-        {/* Logo/Brand */}
         <div className="text-center mb-8">
-          <Link to="/" className="inline-block">
-            <h1 className="text-2xl font-light tracking-wide mb-2">Skill bridge</h1>
-          </Link>
           <p className="text-sm text-gray-500">Student collaboration platform</p>
         </div>
 
