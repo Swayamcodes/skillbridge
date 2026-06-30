@@ -11,5 +11,6 @@ router.get('/:id', gigController.getGigById);
 router.post('/:id/apply', requireAuth, gigController.applyToGig);
 router.get('/:id/applicants', requireAuth, gigController.getGigApplicants);
 router.put('/:id/complete', requireAuth, gigController.completeGig);
+router.delete('/:id', requireAuth, gigController.deleteGig);
 
 export default router;

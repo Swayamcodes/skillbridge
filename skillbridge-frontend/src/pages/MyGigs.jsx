@@ -13,6 +13,7 @@ const MyGigs = () => {
   const [assignedGigs, setAssignedGigs] = useState([]);
   const [unreadCountsByGig, setUnreadCountsByGig] = useState({});
   const [loading, setLoading] = useState(true);
+  const [deletingGigId, setDeletingGigId] = useState(null);
 
   useEffect(() => {
     fetchGigs();
@@ -56,6 +57,22 @@ const MyGigs = () => {
       alert('Payment released!');
     } catch (error) {
       alert(error.response?.data?.message || 'Failed to complete gig');
+    }
+  };
+
+  const handleDelete = async (gigId) => {
+    if (!window.confirm('Are you sure you want to delete this gig? This cannot be undone.')) return;
+
+    setDeletingGigId(gigId);
+
+    try {
+      await api.delete(`/api/gigs/${gigId}`);
+      await fetchGigs();
+      alert('Gig deleted successfully');
+    } catch (error) {
+      alert(error.response?.data?.message || 'Failed to delete gig');
+    } finally {
+      setDeletingGigId(null);
     }
   };
 
@@ -178,6 +195,16 @@ const MyGigs = () => {
               className="flex-1 text-center bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors"
             >
               Mark Complete
+            </button>
+          )}
+          {isPosted && gig.status === 'open' && (
+            <button
+              type="button"
+              onClick={() => handleDelete(gig.id)}
+              disabled={deletingGigId === gig.id}
+              className="flex-1 text-center bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {deletingGigId === gig.id ? 'Deleting...' : 'Delete'}
             </button>
           )}
           {isPosted && (

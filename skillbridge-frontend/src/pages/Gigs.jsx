@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Avatar from '../components/Avatar';
 import Pagination from '../components/Pagination';
 import { GigCardSkeleton } from '../components/Skeletons';
@@ -7,6 +7,8 @@ import Navbar from '../components/Navbar';
 import api from '../services/api';
 
 const Gigs = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [gigs, setGigs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
@@ -16,10 +18,18 @@ const Gigs = () => {
   const [allSkills, setAllSkills] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [successMessage, setSuccessMessage] = useState(location.state?.message || '');
 
   useEffect(() => {
     fetchGigs();
   }, []);
+
+  useEffect(() => {
+    if (location.state?.message) {
+      setSuccessMessage(location.state.message);
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.pathname, location.state, navigate]);
 
   const fetchGigs = async (page = 1) => {
     try {
@@ -162,6 +172,12 @@ const Gigs = () => {
           <h1 className="text-4xl font-light mb-2">Browse Opportunities</h1>
           <p className="text-gray-600">Discover gigs and connect with peers across campus</p>
         </div>
+
+        {successMessage && (
+          <div className="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+            {successMessage}
+          </div>
+        )}
 
         {/* Search Bar */}
         <div className="mb-6">

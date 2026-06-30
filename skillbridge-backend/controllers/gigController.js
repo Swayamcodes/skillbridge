@@ -331,6 +331,70 @@ export const getMyAssignedGigs = async (req, res) => {
   }
 };
 
+export const deleteGig = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+    const db = req.supabase || supabase;
+
+    const { data: profile, error: profileError } = await db
+      .from('profiles')
+      .select('id')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (profileError) throw profileError;
+    if (!profile) {
+      return res.status(404).json({ success: false, message: 'Profile not found' });
+    }
+
+    const { data: gig, error: gigError } = await db
+      .from('gigs')
+      .select('id, creator_id, status')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (gigError) throw gigError;
+    if (!gig) {
+      return res.status(404).json({ success: false, message: 'Gig not found' });
+    }
+
+    if (gig.creator_id !== profile.id) {
+      return res.status(403).json({ success: false, message: 'Only creator can delete this gig' });
+    }
+
+    if (gig.status !== 'open') {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot delete a gig that has been assigned or completed"
+      });
+    }
+
+    const { error: applicationsDeleteError } = await db
+      .from('applications')
+      .delete()
+      .eq('gig_id', id);
+
+    if (applicationsDeleteError) throw applicationsDeleteError;
+
+    const { data: deletedGig, error: gigDeleteError } = await db
+      .from('gigs')
+      .delete()
+      .eq('id', id)
+      .select('id')
+      .maybeSingle();
+
+    if (gigDeleteError) throw gigDeleteError;
+    if (!deletedGig) {
+      return res.status(403).json({ success: false, message: 'Not authorized to delete this gig' });
+    }
+
+    res.json({ success: true, message: 'Gig deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 export const completeGig = async (req, res) => {
   const rollbackState = {
     transactionId: null,

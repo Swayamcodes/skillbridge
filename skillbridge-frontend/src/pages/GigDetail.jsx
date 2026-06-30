@@ -13,6 +13,7 @@ const GigDetail = () => {
   const [gig, setGig] = useState(null);
   const [loading, setLoading] = useState(true);
   const [applying, setApplying] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [applicationMessage, setApplicationMessage] = useState('');
   const [error, setError] = useState('');
   const [chatUnreadCount, setChatUnreadCount] = useState(0);
@@ -77,6 +78,26 @@ const GigDetail = () => {
       const message = error.response?.data?.message || 'Failed to complete gig';
       setError(message);
       alert(message);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm('Are you sure you want to delete this gig? This cannot be undone.')) return;
+
+    setDeleting(true);
+    setError('');
+
+    try {
+      const response = await api.delete(`/api/gigs/${id}`);
+      navigate('/gigs', {
+        state: { message: response.data?.message || 'Gig deleted successfully' }
+      });
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to delete gig';
+      setError(message);
+      alert(message);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -215,6 +236,18 @@ const GigDetail = () => {
                     View Applicants
                   </Link>
                 </div>
+                {gig.status === 'open' && (
+                  <div className="mt-4 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={handleDelete}
+                      disabled={deleting}
+                      className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {deleting ? 'Deleting...' : 'Delete Gig'}
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
