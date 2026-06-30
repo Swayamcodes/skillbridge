@@ -1,5 +1,18 @@
 import { useState, useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom';
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Coins,
+  FolderKanban,
+  IndianRupee,
+  MessageCircle,
+  PenLine,
+  Plus,
+  UserCheck,
+  Users,
+  XCircle,
+} from 'lucide-react';
 import { AuthContext } from '../context/auth';
 import Avatar from '../components/Avatar';
 import { GigCardSkeleton } from '../components/Skeletons';
@@ -78,37 +91,40 @@ const MyGigs = () => {
 
   const getStatusBadge = (status) => {
     const badges = {
-      open: { bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-300', icon: '🟢' },
-      assigned: { bg: 'bg-yellow-100', text: 'text-yellow-800', border: 'border-yellow-300', icon: '⏳' },
-      completed: { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-300', icon: '✓' },
-      closed: { bg: 'bg-gray-100', text: 'text-gray-800', border: 'border-gray-300', icon: '🔒' }
+      open: { bg: 'bg-emerald-50', text: 'text-emerald-800', border: 'border-emerald-700/20', icon: CheckCircle2 },
+      assigned: { bg: 'bg-amber-50', text: 'text-amber-800', border: 'border-amber-300/70', icon: Users },
+      completed: { bg: 'bg-blue-50', text: 'text-blue-800', border: 'border-blue-300/70', icon: CheckCircle2 },
+      closed: { bg: 'bg-gray-100', text: 'text-gray-700', border: 'border-gray-300', icon: XCircle }
     };
     return badges[status] || badges.open;
   };
 
   const GigCard = ({ gig, isPosted }) => {
     const statusBadge = getStatusBadge(gig.status);
+    const StatusIcon = statusBadge.icon;
     const unreadCount = unreadCountsByGig[gig.id] || 0;
     
     return (
-      <div className="bg-white rounded-xl border border-gray-200 p-6 hover:border-emerald-300 hover:shadow-lg transition-all">
-        <div className="flex items-start justify-between gap-4 mb-4">
-          <div className="flex-1">
+      <div className="flex h-full flex-col rounded-xl border border-emerald-900/10 bg-white p-6 shadow-[0_12px_30px_rgba(16,24,40,0.05)] transition-all hover:-translate-y-1 hover:border-emerald-700/30 hover:shadow-[0_18px_45px_rgba(16,24,40,0.09)]">
+        <div className="mb-4 flex items-start justify-between gap-4">
+          <div className="min-w-0 flex-1">
             <Link 
               to={`/gigs/${gig.id}`} 
-              className="text-xl font-medium hover:text-emerald-700 transition-colors line-clamp-2 block mb-2"
+              className="mb-2 block line-clamp-2 text-xl font-semibold leading-snug text-gray-950 transition-colors hover:text-emerald-800"
             >
               {gig.title}
             </Link>
-            <p className="text-gray-600 text-sm line-clamp-2 leading-relaxed">{gig.description}</p>
+            <p className="line-clamp-2 text-sm leading-6 text-gray-600">{gig.description}</p>
           </div>
           <div className="flex-shrink-0">
             {gig.type === 'paid' ? (
-              <span className="bg-emerald-700 text-white px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap">
-                ₹{gig.price}
+              <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-700 px-3 py-1.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(6,78,59,0.14)] whitespace-nowrap">
+                <IndianRupee size={14} aria-hidden="true" />
+                {gig.price}
               </span>
             ) : (
-              <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap">
+              <span className="inline-flex items-center gap-1 rounded-lg border border-emerald-700/15 bg-emerald-50 px-3 py-1.5 text-sm font-semibold text-emerald-800 whitespace-nowrap">
+                <Coins size={14} aria-hidden="true" />
                 {gig.credits} Credits
               </span>
             )}
@@ -116,20 +132,22 @@ const MyGigs = () => {
         </div>
 
         <div className="mb-4">
-          <span className={`px-3 py-1 rounded-full text-xs font-medium border ${statusBadge.bg} ${statusBadge.text} ${statusBadge.border} inline-flex items-center gap-1.5`}>
-            <span>{statusBadge.icon}</span>
-            <span className="uppercase">{gig.status}</span>
+          <span className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold uppercase tracking-wide ${statusBadge.bg} ${statusBadge.text} ${statusBadge.border}`}>
+            <StatusIcon size={13} aria-hidden="true" />
+            {gig.status}
           </span>
         </div>
 
         {isPosted && gig.assigned_to && (
           <div className="mb-3 flex items-center gap-2 text-sm text-gray-600">
-            <Avatar profile={gig.assigned} size="sm" className="h-8 w-8 text-sm" />
+            <div className="rounded-lg bg-emerald-50 p-0.5 ring-1 ring-emerald-700/10">
+              <Avatar profile={gig.assigned} size="sm" className="h-8 w-8 text-sm" />
+            </div>
             <span>
               Assigned to:{' '}
               <Link
                 to={`/profile/${gig.assigned?.id}`}
-                className="font-medium text-gray-900 hover:text-emerald-700 hover:underline"
+                className="font-semibold text-gray-900 transition-colors hover:text-emerald-800 hover:underline"
               >
                 {gig.assigned?.full_name}
               </Link>
@@ -139,12 +157,14 @@ const MyGigs = () => {
 
         {!isPosted && gig.creator && (
           <div className="mb-3 flex items-center gap-2 text-sm text-gray-600">
-            <Avatar profile={gig.creator} size="sm" className="h-8 w-8 text-sm" />
+            <div className="rounded-lg bg-emerald-50 p-0.5 ring-1 ring-emerald-700/10">
+              <Avatar profile={gig.creator} size="sm" className="h-8 w-8 text-sm" />
+            </div>
             <span>
               Posted by:{' '}
               <Link
                 to={`/profile/${gig.creator?.id}`}
-                className="font-medium text-gray-900 hover:text-emerald-700 hover:underline"
+                className="font-semibold text-gray-900 transition-colors hover:text-emerald-800 hover:underline"
               >
                 {gig.creator?.full_name}
               </Link>
@@ -153,46 +173,32 @@ const MyGigs = () => {
         )}
 
         {gig.skills_required && gig.skills_required.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-4">
+          <div className="mb-5 flex flex-wrap gap-2">
             {gig.skills_required.slice(0, 3).map((skill, index) => (
-              <span key={index} className="bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full text-xs">
+              <span key={index} className="rounded-md border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-semibold text-gray-700">
                 {skill}
               </span>
             ))}
             {gig.skills_required.length > 3 && (
-              <span className="bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full text-xs">
+              <span className="rounded-md border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-semibold text-gray-700">
                 +{gig.skills_required.length - 3} more
               </span>
             )}
           </div>
         )}
 
-        <div className="flex gap-2 pt-4 border-t border-gray-100">
+        <div className="mt-auto flex flex-wrap gap-2 border-t border-emerald-900/10 pt-4">
           <Link
             to={`/gigs/${gig.id}`}
-            className="flex-1 text-center bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-800 transition-colors"
+            className="flex-1 rounded-lg bg-emerald-700 px-4 py-2 text-center text-sm font-semibold text-white shadow-[0_10px_24px_rgba(6,78,59,0.14)] transition-all hover:-translate-y-0.5 hover:bg-emerald-800"
           >
             View Details
           </Link>
-          {gig.status === 'assigned' && (
-            <Link
-              to="/messages"
-              state={{ gigId: gig.id, otherUserId: isPosted ? gig.assigned?.id : gig.creator?.id }}
-              className="relative flex-1 text-center border border-emerald-700 text-emerald-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-50 transition-colors"
-            >
-              Chat
-              {unreadCount > 0 && (
-                <span className="absolute -right-2 -top-2 min-w-5 rounded-full bg-red-600 px-1.5 py-0.5 text-xs font-medium text-white">
-                  {unreadCount > 9 ? '9+' : unreadCount}
-                </span>
-              )}
-            </Link>
-          )}
           {isPosted && gig.status === 'assigned' && (
             <button
               type="button"
               onClick={() => handleComplete(gig.id)}
-              className="flex-1 text-center bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors"
+              className="flex-1 whitespace-nowrap rounded-lg bg-gray-950 px-4 py-2 text-center text-sm font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-emerald-700"
             >
               Mark Complete
             </button>
@@ -202,7 +208,7 @@ const MyGigs = () => {
               type="button"
               onClick={() => handleDelete(gig.id)}
               disabled={deletingGigId === gig.id}
-              className="flex-1 text-center bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 rounded-lg bg-red-600 px-4 py-2 text-center text-sm font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
             >
               {deletingGigId === gig.id ? 'Deleting...' : 'Delete'}
             </button>
@@ -210,9 +216,25 @@ const MyGigs = () => {
           {isPosted && (
             <Link
               to={`/gigs/${gig.id}/applicants`}
-              className="flex-1 text-center border border-emerald-700 text-emerald-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-50 transition-colors"
+              className="flex-1 rounded-lg border border-emerald-700/30 bg-white px-4 py-2 text-center text-sm font-semibold text-emerald-800 transition-all hover:-translate-y-0.5 hover:bg-emerald-50"
             >
               Applicants
+            </Link>
+          )}
+          {gig.status === 'assigned' && (
+            <Link
+              to="/messages"
+              state={{ gigId: gig.id, otherUserId: isPosted ? gig.assigned?.id : gig.creator?.id }}
+              aria-label="Open chat"
+              title="Chat"
+              className="relative inline-flex h-9 w-10 flex-none items-center justify-center rounded-lg border border-emerald-700/30 bg-white text-emerald-800 transition-all hover:-translate-y-0.5 hover:bg-emerald-50"
+            >
+              <MessageCircle size={17} aria-hidden="true" />
+              {unreadCount > 0 && (
+                <span className="absolute -right-2 -top-2 min-w-5 rounded-full bg-red-600 px-1.5 py-0.5 text-xs font-semibold text-white">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
             </Link>
           )}
         </div>
@@ -222,30 +244,33 @@ const MyGigs = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+      <div className="min-h-screen bg-[#F7F8F4]">
         <Navbar />
 
-        <div className="max-w-6xl mx-auto px-6 py-12">
+        <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:py-10">
           <div className="mb-8">
-            <Link to="/dashboard" className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors mb-4">
-              â† Back to Dashboard
+            <Link to="/dashboard" className="mb-4 inline-flex items-center gap-2 text-sm font-semibold text-gray-600 transition-colors hover:text-emerald-800">
+              <ArrowLeft size={16} aria-hidden="true" />
+              Back to Dashboard
             </Link>
-            <h1 className="text-4xl font-light mb-2">My Gigs</h1>
+            <h1 className="mb-2 text-4xl font-semibold tracking-tight text-gray-950">My Gigs</h1>
             <p className="text-gray-600">Manage gigs you've posted and gigs assigned to you</p>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-200 p-2 mb-8 inline-flex gap-2">
-            <button className="px-6 py-3 rounded-lg font-medium transition-all bg-emerald-700 text-white shadow-sm">
-              ðŸ“ Posted by Me
+          <div className="mb-8 inline-flex gap-2 rounded-xl border border-emerald-900/10 bg-white p-2 shadow-[0_12px_30px_rgba(16,24,40,0.05)]">
+            <button className="inline-flex items-center gap-2 rounded-lg bg-emerald-700 px-6 py-3 font-semibold text-white shadow-[0_10px_24px_rgba(6,78,59,0.14)] transition-all">
+              <PenLine size={16} aria-hidden="true" />
+              Posted by Me
             </button>
-            <button className="px-6 py-3 rounded-lg font-medium transition-all text-gray-700 hover:bg-gray-100">
-              âœ“ Assigned to Me
+            <button className="inline-flex items-center gap-2 rounded-lg px-6 py-3 font-semibold text-gray-700 transition-all hover:bg-emerald-50">
+              <CheckCircle2 size={16} aria-hidden="true" />
+              Assigned to Me
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             {Array.from({ length: 4 }).map((_, index) => (
-              <GigCardSkeleton key={index} className="bg-white" />
+              <GigCardSkeleton key={index} className="bg-white shadow-[0_12px_30px_rgba(16,24,40,0.05)]" />
             ))}
           </div>
         </div>
@@ -254,40 +279,43 @@ const MyGigs = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+    <div className="min-h-screen bg-[#F7F8F4]">
       <Navbar />
 
-      <div className="max-w-6xl mx-auto px-6 py-12">
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:py-10">
         {/* Header */}
         <div className="mb-8">
-          <Link to="/dashboard" className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors mb-4">
-            ← Back to Dashboard
+          <Link to="/dashboard" className="mb-4 inline-flex items-center gap-2 text-sm font-semibold text-gray-600 transition-colors hover:text-emerald-800">
+            <ArrowLeft size={16} aria-hidden="true" />
+            Back to Dashboard
           </Link>
-          <h1 className="text-4xl font-light mb-2">My Gigs</h1>
+          <h1 className="mb-2 text-4xl font-semibold tracking-tight text-gray-950">My Gigs</h1>
           <p className="text-gray-600">Manage gigs you've posted and gigs assigned to you</p>
         </div>
 
         {/* Tab Navigation */}
-        <div className="bg-white rounded-xl border border-gray-200 p-2 mb-8 inline-flex gap-2">
+        <div className="mb-8 inline-flex flex-wrap gap-2 rounded-xl border border-emerald-900/10 bg-white p-2 shadow-[0_12px_30px_rgba(16,24,40,0.05)]">
           <button
             onClick={() => setActiveTab('posted')}
-            className={`px-6 py-3 rounded-lg font-medium transition-all ${
+            className={`inline-flex items-center gap-2 rounded-lg px-6 py-3 font-semibold transition-all ${
               activeTab === 'posted' 
-                ? 'bg-emerald-700 text-white shadow-sm' 
-                : 'text-gray-700 hover:bg-gray-100'
+                ? 'bg-emerald-700 text-white shadow-[0_10px_24px_rgba(6,78,59,0.14)]' 
+                : 'text-gray-700 hover:bg-emerald-50 hover:text-emerald-800'
             }`}
           >
-            📝 Posted by Me ({postedGigs.length})
+            <PenLine size={16} aria-hidden="true" />
+            Posted by Me ({postedGigs.length})
           </button>
           <button
             onClick={() => setActiveTab('assigned')}
-            className={`px-6 py-3 rounded-lg font-medium transition-all ${
+            className={`inline-flex items-center gap-2 rounded-lg px-6 py-3 font-semibold transition-all ${
               activeTab === 'assigned' 
-                ? 'bg-emerald-700 text-white shadow-sm' 
-                : 'text-gray-700 hover:bg-gray-100'
+                ? 'bg-emerald-700 text-white shadow-[0_10px_24px_rgba(6,78,59,0.14)]' 
+                : 'text-gray-700 hover:bg-emerald-50 hover:text-emerald-800'
             }`}
           >
-            ✓ Assigned to Me ({assignedGigs.length})
+            <CheckCircle2 size={16} aria-hidden="true" />
+            Assigned to Me ({assignedGigs.length})
           </button>
         </div>
 
@@ -295,21 +323,22 @@ const MyGigs = () => {
         {activeTab === 'posted' && (
           <div>
             {postedGigs.length === 0 ? (
-              <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-                <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
-                  <span className="text-3xl">📝</span>
+              <div className="rounded-xl border border-dashed border-emerald-900/20 bg-white p-12 text-center shadow-[0_16px_38px_rgba(16,24,40,0.06)]">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-lg bg-emerald-100 text-emerald-800">
+                  <PenLine size={30} aria-hidden="true" />
                 </div>
-                <h3 className="text-xl font-light mb-2">No gigs posted yet</h3>
-                <p className="text-gray-600 mb-6">Create your first gig and start collaborating with peers</p>
+                <h3 className="mb-2 text-xl font-semibold text-gray-950">No gigs posted yet</h3>
+                <p className="mb-6 text-gray-600">Create your first gig and start collaborating with peers</p>
                 <Link
                   to="/gigs/post"
-                  className="inline-block bg-emerald-700 text-white px-6 py-3 rounded-full hover:bg-emerald-800 transition-all hover:scale-105"
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-700 px-6 py-3 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(6,78,59,0.16)] transition-all hover:-translate-y-0.5 hover:bg-emerald-800"
                 >
+                  <Plus size={17} aria-hidden="true" />
                   Post Your First Gig
                 </Link>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 {postedGigs.map((gig) => (
                   <GigCard key={gig.id} gig={gig} isPosted={true} />
                 ))}
@@ -322,21 +351,22 @@ const MyGigs = () => {
         {activeTab === 'assigned' && (
           <div>
             {assignedGigs.length === 0 ? (
-              <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-                <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
-                  <span className="text-3xl">🎯</span>
+              <div className="rounded-xl border border-dashed border-emerald-900/20 bg-white p-12 text-center shadow-[0_16px_38px_rgba(16,24,40,0.06)]">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-lg bg-emerald-100 text-emerald-800">
+                  <UserCheck size={30} aria-hidden="true" />
                 </div>
-                <h3 className="text-xl font-light mb-2">No gigs assigned yet</h3>
-                <p className="text-gray-600 mb-6">Apply to gigs and get accepted to see them here</p>
+                <h3 className="mb-2 text-xl font-semibold text-gray-950">No gigs assigned yet</h3>
+                <p className="mb-6 text-gray-600">Apply to gigs and get accepted to see them here</p>
                 <Link
                   to="/gigs"
-                  className="inline-block bg-emerald-700 text-white px-6 py-3 rounded-full hover:bg-emerald-800 transition-all hover:scale-105"
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-700 px-6 py-3 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(6,78,59,0.16)] transition-all hover:-translate-y-0.5 hover:bg-emerald-800"
                 >
+                  <FolderKanban size={17} aria-hidden="true" />
                   Browse Available Gigs
                 </Link>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 {assignedGigs.map((gig) => (
                   <GigCard key={gig.id} gig={gig} isPosted={false} />
                 ))}
@@ -346,28 +376,28 @@ const MyGigs = () => {
         )}
 
         {/* Stats Summary */}
-        <div className="mt-12 bg-gradient-to-r from-emerald-50 to-gray-50 rounded-xl border border-gray-200 p-6">
-          <h3 className="font-medium text-gray-900 mb-4">Summary</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center">
-              <p className="text-2xl font-light mb-1">{postedGigs.length}</p>
-              <p className="text-sm text-gray-600">Posted</p>
+        <div className="mt-12 rounded-xl border border-emerald-900/10 bg-white p-6 shadow-[0_16px_38px_rgba(16,24,40,0.06)]">
+          <h3 className="mb-4 font-semibold text-gray-950">Summary</h3>
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            <div className="rounded-lg border border-emerald-700/20 bg-emerald-50 p-4 text-center">
+              <p className="mb-1 text-2xl font-semibold tracking-tight text-emerald-800">{postedGigs.length}</p>
+              <p className="text-sm font-medium text-emerald-800">Posted</p>
             </div>
-            <div className="text-center">
-              <p className="text-2xl font-light mb-1">{assignedGigs.length}</p>
-              <p className="text-sm text-gray-600">Assigned</p>
+            <div className="rounded-lg border border-blue-300/70 bg-blue-50 p-4 text-center">
+              <p className="mb-1 text-2xl font-semibold tracking-tight text-blue-800">{assignedGigs.length}</p>
+              <p className="text-sm font-medium text-blue-800">Assigned</p>
             </div>
-            <div className="text-center">
-              <p className="text-2xl font-light mb-1">
+            <div className="rounded-lg border border-amber-300/70 bg-amber-50 p-4 text-center">
+              <p className="mb-1 text-2xl font-semibold tracking-tight text-amber-800">
                 {postedGigs.filter(g => g.status === 'open').length}
               </p>
-              <p className="text-sm text-gray-600">Open</p>
+              <p className="text-sm font-medium text-amber-800">Open</p>
             </div>
-            <div className="text-center">
-              <p className="text-2xl font-light mb-1">
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-center">
+              <p className="mb-1 text-2xl font-semibold tracking-tight text-gray-800">
                 {[...postedGigs, ...assignedGigs].filter(g => g.status === 'completed').length}
               </p>
-              <p className="text-sm text-gray-600">Completed</p>
+              <p className="text-sm font-medium text-gray-700">Completed</p>
             </div>
           </div>
         </div>

@@ -175,7 +175,7 @@ const PostGig = () => {
                       />
                       <div className="flex items-center gap-2 font-semibold text-gray-800">
                         <IndianRupee size={18} className="text-emerald-700" aria-hidden="true" />
-                        <span>Paid (INR)</span>
+                        <span>Paid (₹)</span>
                       </div>
                     </label>
                     <label className={`flex cursor-pointer items-center justify-center gap-3 rounded-xl border p-4 transition-all ${
@@ -203,7 +203,7 @@ const PostGig = () => {
                 {formData.type === 'paid' ? (
                   <div>
                     <label className="mb-2 block text-sm font-semibold text-gray-700">
-                      Price (INR)
+                      Price (₹)
                     </label>
                     <div className="relative">
                       <IndianRupee className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={17} aria-hidden="true" />

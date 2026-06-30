@@ -1,5 +1,14 @@
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import {
+  ArrowLeft,
+  BriefcaseBusiness,
+  Inbox,
+  LayoutDashboard,
+  MessageCircle,
+  Search,
+  SendHorizontal,
+} from 'lucide-react';
 import Avatar from '../components/Avatar';
 import { AuthContext } from '../context/auth';
 import api from '../services/api';
@@ -34,10 +43,10 @@ const formatMessageTime = (value) => {
 };
 
 const ConversationSkeleton = () => (
-  <div className="divide-y divide-gray-100">
+  <div className="space-y-2 p-3">
     {[0, 1, 2, 3, 4, 5].map((item) => (
-      <div key={item} className="flex items-center gap-3 px-4 py-4">
-        <div className="h-12 w-12 flex-shrink-0 animate-pulse rounded-full bg-current/10" />
+      <div key={item} className="flex items-center gap-3 rounded-xl border border-emerald-900/10 bg-white px-4 py-4 shadow-[0_10px_24px_rgba(16,24,40,0.04)]">
+        <div className="h-12 w-12 flex-shrink-0 animate-pulse rounded-lg bg-current/10" />
         <div className="min-w-0 flex-1 space-y-2">
           <div className="h-5 w-36 animate-pulse rounded bg-current/10" />
           <div className="h-4 w-48 animate-pulse rounded bg-current/10" />
@@ -49,11 +58,11 @@ const ConversationSkeleton = () => (
 );
 
 const MessageSkeleton = () => (
-  <div className="space-y-5 px-6 py-6">
+  <div className="space-y-5 px-4 py-6 sm:px-6">
     {[0, 1, 2, 3].map((item) => (
       <div key={item} className={`flex ${item % 2 === 0 ? 'justify-start' : 'justify-end'}`}>
-        <div className="flex w-2/3 max-w-md flex-col gap-2">
-          <div className="h-16 w-full animate-pulse rounded-2xl bg-current/10" />
+        <div className={`flex w-2/3 max-w-md flex-col gap-2 ${item % 2 === 0 ? 'items-start' : 'items-end'}`}>
+          <div className={`h-16 w-full animate-pulse rounded-2xl bg-current/10 ${item % 2 === 0 ? 'rounded-bl-md' : 'rounded-br-md'}`} />
           <div className="h-3 w-20 animate-pulse rounded bg-current/10" />
         </div>
       </div>
@@ -238,46 +247,57 @@ const Messages = () => {
   };
 
   return (
-    <div className="h-screen overflow-hidden bg-gradient-to-br from-gray-50 to-white text-gray-900">
-      <div className="flex h-full">
-        <aside className={`${selectedConversation ? 'hidden md:flex' : 'flex'} h-full w-full flex-col border-r border-gray-200 bg-white md:w-[380px] md:flex-shrink-0`}>
-          <div className="border-b border-gray-200 px-5 py-5">
-            <div className="mb-4 flex items-center justify-between gap-4">
-              <h1 className="text-3xl font-light">Chats</h1>
+    <div className="h-screen overflow-hidden bg-[#F7F8F4] text-gray-900">
+      <div className="flex h-full p-0 md:p-4">
+        <aside className={`${selectedConversation ? 'hidden md:flex' : 'flex'} h-full w-full flex-col border-emerald-900/10 bg-white shadow-[0_18px_45px_rgba(16,24,40,0.08)] md:w-[390px] md:flex-shrink-0 md:rounded-xl md:border`}>
+          <div className="border-b border-emerald-900/10 px-5 py-5">
+            <div className="mb-5 flex items-center justify-between gap-4">
+              <div>
+                <div className="mb-2 inline-flex items-center gap-2 rounded-lg border border-emerald-700/15 bg-emerald-50 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-emerald-800">
+                  <MessageCircle size={14} aria-hidden="true" />
+                  Messages
+                </div>
+                <h1 className="text-3xl font-semibold tracking-tight text-gray-950">Chats</h1>
+              </div>
               <button
                 type="button"
                 onClick={() => navigate('/dashboard')}
-                className="text-sm text-gray-600 transition-colors hover:text-gray-900"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-emerald-700/20 bg-white text-gray-600 transition-all hover:-translate-y-0.5 hover:bg-emerald-50 hover:text-emerald-800"
+                aria-label="Dashboard"
+                title="Dashboard"
               >
-                Dashboard
+                <LayoutDashboard size={18} aria-hidden="true" />
               </button>
             </div>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Search conversations"
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            />
+            <div className="relative">
+              <Search size={17} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" aria-hidden="true" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Search conversations"
+                className="w-full rounded-lg border border-emerald-900/10 bg-gray-50 px-10 py-3 text-sm font-medium text-gray-900 transition-all placeholder:text-gray-400 focus:border-emerald-700/30 focus:bg-white focus:outline-none focus:ring-4 focus:ring-emerald-700/10"
+              />
+            </div>
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto">
+          <div className="min-h-0 flex-1 overflow-y-auto bg-[#F7F8F4]/55 p-3">
             {loadingConversations ? (
               <ConversationSkeleton />
             ) : error && conversations.length === 0 ? (
-              <div className="p-5 text-sm text-red-700">{error}</div>
+              <div className="rounded-xl border border-red-200 bg-red-50 p-5 text-sm font-medium text-red-700">{error}</div>
             ) : filteredConversations.length === 0 ? (
               <div className="flex h-full items-center justify-center p-8 text-center">
                 <div>
-                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 text-2xl">
-                    M
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-lg bg-emerald-100 text-emerald-800">
+                    <Inbox size={30} aria-hidden="true" />
                   </div>
-                  <h2 className="mb-2 text-xl font-light">No conversations yet</h2>
-                  <p className="text-sm text-gray-600">Assigned gig chats will appear here.</p>
+                  <h2 className="mb-2 text-xl font-semibold text-gray-950">No conversations yet</h2>
+                  <p className="text-sm leading-6 text-gray-600">Assigned gig chats will appear here.</p>
                 </div>
               </div>
             ) : (
-              <div className="divide-y divide-gray-100">
+              <div className="space-y-2">
                 {filteredConversations.map((conversation) => {
                   const isActive = conversation.gig_id === selectedGigId;
                   const unreadCount = conversation.unread_count || 0;
@@ -287,29 +307,33 @@ const Messages = () => {
                       key={conversation.gig_id}
                       type="button"
                       onClick={() => handleConversationSelect(conversation)}
-                      className={`flex w-full items-center gap-3 px-4 py-4 text-left transition-colors hover:bg-emerald-50 ${
-                        isActive ? 'bg-emerald-50' : 'bg-white'
+                      className={`flex w-full items-center gap-3 rounded-xl border px-4 py-4 text-left transition-all hover:-translate-y-0.5 hover:border-emerald-700/30 hover:bg-white hover:shadow-[0_12px_30px_rgba(16,24,40,0.06)] ${
+                        isActive
+                          ? 'border-emerald-700/30 bg-white shadow-[0_12px_30px_rgba(16,24,40,0.06)]'
+                          : 'border-transparent bg-transparent'
                       }`}
                     >
-                      <Avatar profile={conversation.other_party} size="md" />
+                      <div className="rounded-lg bg-emerald-50 p-0.5 ring-1 ring-emerald-700/10">
+                        <Avatar profile={conversation.other_party} size="md" />
+                      </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
-                            <p className="truncate font-medium text-gray-900">
+                            <p className="truncate font-semibold text-gray-950">
                               {conversation.other_party?.full_name || 'Unknown user'}
                             </p>
-                            <p className="truncate text-xs text-gray-500">{conversation.gig?.title}</p>
+                            <p className="mt-0.5 truncate text-xs font-medium text-emerald-800">{conversation.gig?.title}</p>
                           </div>
-                          <span className="flex-shrink-0 text-xs text-gray-500">
+                          <span className="flex-shrink-0 text-xs font-medium text-gray-500">
                             {formatConversationTime(conversation.last_message?.created_at)}
                           </span>
                         </div>
-                        <div className="mt-1 flex items-center justify-between gap-3">
+                        <div className="mt-2 flex items-center justify-between gap-3">
                           <p className="truncate text-sm text-gray-600">
                             {conversation.last_message?.content || 'No messages yet'}
                           </p>
                           {unreadCount > 0 && (
-                            <span className="min-w-5 flex-shrink-0 rounded-full bg-emerald-700 px-1.5 py-0.5 text-center text-xs font-medium text-white">
+                            <span className="min-w-5 flex-shrink-0 rounded-full bg-emerald-700 px-1.5 py-0.5 text-center text-xs font-semibold text-white shadow-[0_8px_18px_rgba(6,78,59,0.18)]">
                               {unreadCount > 99 ? '99+' : unreadCount}
                             </span>
                           )}
@@ -323,54 +347,61 @@ const Messages = () => {
           </div>
         </aside>
 
-        <section className={`${selectedConversation ? 'flex' : 'hidden md:flex'} h-full min-w-0 flex-1 flex-col bg-gray-50`}>
+        <section className={`${selectedConversation ? 'flex' : 'hidden md:flex'} h-full min-w-0 flex-1 flex-col bg-[#F7F8F4] md:ml-4`}>
           {!selectedConversation ? (
-            <div className="flex h-full items-center justify-center p-8 text-center">
+            <div className="flex h-full items-center justify-center rounded-xl border border-dashed border-emerald-900/20 bg-white p-8 text-center shadow-[0_18px_45px_rgba(16,24,40,0.06)]">
               <div>
-                <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 text-3xl text-emerald-700">
-                  M
+                <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800">
+                  <MessageCircle size={36} aria-hidden="true" />
                 </div>
-                <h2 className="text-2xl font-light">Select a conversation to start chatting</h2>
+                <h2 className="text-2xl font-semibold tracking-tight text-gray-950">Select a conversation to start chatting</h2>
                 <p className="mt-2 text-gray-600">Choose a chat from the sidebar.</p>
               </div>
             </div>
           ) : (
-            <>
-              <header className="flex items-center gap-3 border-b border-gray-200 bg-white px-4 py-4">
+            <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-white shadow-[0_18px_45px_rgba(16,24,40,0.08)] md:rounded-xl md:border md:border-emerald-900/10">
+              <header className="flex items-center gap-3 border-b border-emerald-900/10 bg-white px-4 py-4 sm:px-5">
                 <button
                   type="button"
                   onClick={() => setSelectedConversation(null)}
-                  className="inline-flex text-sm text-gray-600 transition-colors hover:text-gray-900 md:hidden"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-emerald-700/20 bg-white text-gray-600 transition-all hover:bg-emerald-50 hover:text-emerald-800 md:hidden"
+                  aria-label="Back to conversations"
                 >
-                  Back
+                  <ArrowLeft size={17} aria-hidden="true" />
                 </button>
-                <Link to={`/profile/${selectedConversation.other_party?.id}`} className="flex-shrink-0">
+                <Link to={`/profile/${selectedConversation.other_party?.id}`} className="flex-shrink-0 rounded-lg bg-emerald-50 p-0.5 ring-1 ring-emerald-700/10">
                   <Avatar profile={selectedConversation.other_party} size="md" />
                 </Link>
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <Link
                     to={`/profile/${selectedConversation.other_party?.id}`}
-                    className="block truncate font-medium text-gray-900 transition-colors hover:text-emerald-700"
+                    className="block truncate font-semibold text-gray-950 transition-colors hover:text-emerald-800"
                   >
                     {selectedConversation.other_party?.full_name || 'Unknown user'}
                   </Link>
-                  <p className="truncate text-sm text-gray-500">{selectedConversation.gig?.title}</p>
+                  <p className="mt-0.5 flex items-center gap-1.5 truncate text-sm font-medium text-gray-500">
+                    <BriefcaseBusiness size={14} aria-hidden="true" />
+                    {selectedConversation.gig?.title}
+                  </p>
                 </div>
               </header>
 
               {error && (
-                <div className="border-b border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                <div className="border-b border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
                   {error}
                 </div>
               )}
 
-              <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5">
+              <div className="min-h-0 flex-1 overflow-y-auto bg-[#F7F8F4]/65 px-4 py-5 sm:px-6">
                 {loadingMessages ? (
                   <MessageSkeleton />
                 ) : messages.length === 0 ? (
                   <div className="flex h-full items-center justify-center text-center">
                     <div>
-                      <h2 className="text-2xl font-light text-gray-900">No messages yet.</h2>
+                      <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-lg bg-emerald-100 text-emerald-800">
+                        <MessageCircle size={30} aria-hidden="true" />
+                      </div>
+                      <h2 className="text-2xl font-semibold tracking-tight text-gray-950">No messages yet.</h2>
                       <p className="mt-2 text-gray-600">Start the conversation!</p>
                     </div>
                   </div>
@@ -383,17 +414,17 @@ const Messages = () => {
                         <div key={message.id} className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
                           <div className={`flex max-w-[82%] flex-col gap-1 sm:max-w-[70%] ${isOwnMessage ? 'items-end' : 'items-start'}`}>
                             <div
-                              className={`rounded-2xl px-5 py-3 shadow-sm ${
+                              className={`rounded-2xl px-5 py-3 shadow-[0_10px_24px_rgba(16,24,40,0.06)] ${
                                 isOwnMessage
                                   ? 'rounded-br-md bg-emerald-700 text-white'
-                                  : 'rounded-bl-md border border-gray-200 bg-white text-gray-800'
+                                  : 'rounded-bl-md border border-emerald-900/10 bg-white text-gray-800'
                               }`}
                             >
                               <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
                                 {message.content}
                               </p>
                             </div>
-                            <span className="px-1 text-xs text-gray-500">{formatMessageTime(message.created_at)}</span>
+                            <span className="px-1 text-xs font-medium text-gray-500">{formatMessageTime(message.created_at)}</span>
                           </div>
                         </div>
                       );
@@ -408,7 +439,7 @@ const Messages = () => {
                   event.preventDefault();
                   handleSendMessage();
                 }}
-                className="border-t border-gray-200 bg-white px-4 py-4"
+                className="border-t border-emerald-900/10 bg-white px-4 py-4 sm:px-5"
               >
                 <div className="flex gap-3">
                   <input
@@ -422,20 +453,21 @@ const Messages = () => {
                       }
                     }}
                     placeholder="Type a message..."
-                    className="min-w-0 flex-1 rounded-lg border border-gray-300 px-4 py-3 transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="min-w-0 flex-1 rounded-lg border border-emerald-900/10 bg-gray-50 px-4 py-3 text-sm font-medium text-gray-900 transition-all placeholder:text-gray-400 focus:border-emerald-700/30 focus:bg-white focus:outline-none focus:ring-4 focus:ring-emerald-700/10"
                     maxLength={1000}
                     disabled={loadingMessages}
                   />
                   <button
                     type="submit"
                     disabled={!newMessage.trim() || sending || loadingMessages}
-                    className="rounded-lg bg-emerald-700 px-6 py-3 font-medium text-white transition-colors hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-700 px-5 py-3 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(6,78,59,0.14)] transition-all hover:-translate-y-0.5 hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
                   >
-                    {sending ? 'Sending...' : 'Send'}
+                    <SendHorizontal size={17} aria-hidden="true" />
+                    <span className="hidden sm:inline">{sending ? 'Sending...' : 'Send'}</span>
                   </button>
                 </div>
               </form>
-            </>
+            </div>
           )}
         </section>
       </div>

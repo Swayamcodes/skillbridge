@@ -320,7 +320,7 @@ const GigDetail = () => {
                 <p className="mb-4 text-gray-700">
                   Mark this gig as complete to release{' '}
                   <span className="font-semibold text-emerald-700">
-                    {gig.type === 'paid' ? `INR ${gig.price}` : `${gig.credits} credits`}
+                    {gig.type === 'paid' ? `₹${gig.price}` : `${gig.credits} credits`}
                   </span>{' '}
                   to the freelancer.
                 </p>

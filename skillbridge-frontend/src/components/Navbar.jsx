@@ -1,5 +1,6 @@
 import { useContext, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { MessageCircle } from 'lucide-react';
 import { AuthContext } from '../context/auth';
 import Logo from './Logo';
 import NotificationBell from './NotificationBell';
@@ -49,23 +50,25 @@ const Navbar = ({ showCredits = false, action }) => {
           >
             Browse Gigs
           </Link>
-          <Link
-            to="/messages"
-            className="relative hidden sm:inline text-sm text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            Messages
-            {unreadMessages > 0 && (
-              <span className="absolute -right-4 -top-2 min-w-5 rounded-full bg-red-600 px-1.5 py-0.5 text-center text-xs font-medium text-white">
-                {unreadMessages > 99 ? '99+' : unreadMessages}
-              </span>
-            )}
-          </Link>
           {action}
           {showCredits && (
             <div className="hidden md:block text-sm text-gray-600">
               <span className="font-medium">{profile?.credits || 0}</span> Credits
             </div>
           )}
+          <Link
+            to="/messages"
+            className="relative rounded-full p-2 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
+            aria-label="Messages"
+            title="Messages"
+          >
+            <MessageCircle size={20} aria-hidden="true" />
+            {unreadMessages > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-700 px-1 text-xs font-medium text-white">
+                {unreadMessages > 99 ? '99+' : unreadMessages}
+              </span>
+            )}
+          </Link>
           <NotificationBell />
           <button
             type="button"
