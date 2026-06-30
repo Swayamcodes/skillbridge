@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 
@@ -8,7 +10,7 @@ from moderation import moderate_text
 
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins=os.environ.get("BACKEND_URL", "http://localhost:5000"))
 
 
 @app.route("/health", methods=["GET"])
@@ -62,7 +64,8 @@ def method_not_allowed(_error):
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5001, debug=True)
+    port = int(os.environ.get("PORT", 5001))
+    app.run(host="0.0.0.0", port=port)
 
 
 

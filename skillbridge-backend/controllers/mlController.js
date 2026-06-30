@@ -1,7 +1,7 @@
 import axios from 'axios';
 import supabase from '../utils/supabase.js';
 
-const ML_SERVICE_URL = 'http://localhost:5001/api/ml/recommend';
+const ML_SERVICE_URL = process.env.ML_SERVICE_URL;
 
 export const getRecommendedGigs = async (req, res) => {
   try {
@@ -35,7 +35,7 @@ export const getRecommendedGigs = async (req, res) => {
       skills_required: Array.isArray(gig.skills_required) ? gig.skills_required : []
     }));
 
-    const mlResponse = await axios.post(ML_SERVICE_URL, {
+    const mlResponse = await axios.post(`${ML_SERVICE_URL}/api/ml/recommend`, {
       user_skills: userSkills,
       open_gigs: gigsArray
     }, {

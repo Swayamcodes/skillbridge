@@ -5,7 +5,7 @@ import { checkFraudRules } from './fraudController.js';
 import { adjustProfileCredits } from '../utils/credits.js';
 import { updateReputationScore } from '../utils/reputation.js';
 
-const MODERATION_SERVICE_URL = 'http://localhost:5001/api/moderate';
+const ML_SERVICE_URL = process.env.ML_SERVICE_URL;
 
 const moderateContent = async (text) => {
   if (!text || !String(text).trim()) {
@@ -14,7 +14,7 @@ const moderateContent = async (text) => {
 
   try {
     const response = await axios.post(
-      MODERATION_SERVICE_URL,
+      `${ML_SERVICE_URL}/api/moderate`,
       { text },
       { timeout: 10000 }
     );

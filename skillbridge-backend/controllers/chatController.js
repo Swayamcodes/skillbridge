@@ -1,7 +1,7 @@
 import axios from 'axios';
 import supabase from '../utils/supabase.js';
 
-const MODERATION_SERVICE_URL = 'http://localhost:5001/api/moderate';
+const ML_SERVICE_URL = process.env.ML_SERVICE_URL;
 const MAX_MESSAGE_LENGTH = 1000;
 
 const getDb = (req) => req.supabase || supabase;
@@ -41,7 +41,7 @@ const getOtherPartyId = (gig, profileId) => {
 const moderateMessage = async (content) => {
   try {
     const response = await axios.post(
-      MODERATION_SERVICE_URL,
+      `${ML_SERVICE_URL}/api/moderate`,
       { text: content },
       { timeout: 10000 }
     );
