@@ -252,6 +252,7 @@ export const getMyConversations = async (req, res) => {
 
     const conversationMap = new Map();
     const unreadCountsByGig = new Map();
+
     for (const message of messages || []) {
       if (message.receiver_id === profile.id && !message.read_at) {
         unreadCountsByGig.set(
@@ -265,6 +266,26 @@ export const getMyConversations = async (req, res) => {
           gig_id: message.gig_id,
           other_profile_id: message.sender_id === profile.id ? message.receiver_id : message.sender_id,
           last_message: message
+        });
+      }
+    }
+
+    const { data: assignedGigs, error: assignedGigsError } = await db
+      .from('gigs')
+      .select('id, title, creator_id, assigned_to')
+      .eq('status', 'assigned')
+      .or(`creator_id.eq.${profile.id},assigned_to.eq.${profile.id}`);
+
+    if (assignedGigsError) throw assignedGigsError;
+
+    for (const gig of assignedGigs || []) {
+      const otherPartyId = getOtherPartyId(gig, profile.id);
+
+      if (otherPartyId && !conversationMap.has(gig.id)) {
+        conversationMap.set(gig.id, {
+          gig_id: gig.id,
+          other_profile_id: otherPartyId,
+          last_message: null
         });
       }
     }

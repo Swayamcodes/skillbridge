@@ -177,7 +177,7 @@ const MyGigs = () => {
           {gig.status === 'assigned' && (
             <Link
               to="/messages"
-              state={{ gigId: gig.id }}
+              state={{ gigId: gig.id, otherUserId: isPosted ? gig.assigned?.id : gig.creator?.id }}
               className="relative flex-1 text-center border border-emerald-700 text-emerald-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-50 transition-colors"
             >
               Chat

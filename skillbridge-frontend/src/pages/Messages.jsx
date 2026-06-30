@@ -97,7 +97,9 @@ const Messages = () => {
       setConversations(nextConversations);
 
       if (!selectedGigRef.current && initialGigId) {
-        const initialConversation = nextConversations.find((conversation) => conversation.gig_id === initialGigId);
+        const initialConversation = nextConversations.find((conversation) => (
+          String(conversation.gig_id) === String(initialGigId)
+        ));
         if (initialConversation) {
           setSelectedConversation(initialConversation);
         }

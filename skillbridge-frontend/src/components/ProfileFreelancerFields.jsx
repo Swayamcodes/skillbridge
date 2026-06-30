@@ -1,4 +1,4 @@
-import { ExternalLink, Phone } from 'lucide-react';
+import { ExternalLink, Mail, Phone } from 'lucide-react';
 
 export const AvailabilityBadge = ({ status = 'available' }) => {
   const badges = {
@@ -29,57 +29,59 @@ const ProfileFreelancerFields = ({ profile }) => {
   const visibleSocialItems = socialItems.filter((item) => socialLinks[item.key]);
 
   return (
-    <>
+    <div className="max-h-80 space-y-3 overflow-y-auto pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      {(profile?.email || profile?.phone_number) && (
+        <div className="grid gap-2">
+          {profile?.email && (
+            <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50/80 px-3 py-2.5 text-sm text-gray-700">
+              <Mail size={15} aria-hidden="true" className="shrink-0 text-emerald-800" />
+              <span className="min-w-0 truncate">{profile.email}</span>
+            </div>
+          )}
+
+          {profile?.phone_number && (
+            <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50/80 px-3 py-2.5 text-sm text-gray-700">
+              <Phone size={15} aria-hidden="true" className="shrink-0 text-emerald-800" />
+              <span className="min-w-0 truncate">{profile.phone_number}</span>
+            </div>
+          )}
+        </div>
+      )}
+
       {portfolioLinks.length > 0 && (
-        <div className="mb-6">
-          <h3 className="text-lg font-medium mb-3">Portfolio</h3>
-          <div className="space-y-2">
+        <div className="space-y-2">
             {portfolioLinks.map((link, index) => (
               <a
                 key={`${link.title}-${index}`}
                 href={link.url}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center justify-between gap-3 rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-700 transition-colors hover:border-emerald-300 hover:bg-emerald-50"
+                className="flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-700 shadow-sm transition-colors hover:border-emerald-300 hover:bg-emerald-50"
               >
-                <span className="font-medium">{link.title}</span>
-                <ExternalLink size={16} aria-hidden="true" />
+                <span className="min-w-0 truncate font-medium">{link.title}</span>
+                <ExternalLink size={15} aria-hidden="true" className="shrink-0" />
               </a>
             ))}
-          </div>
         </div>
       )}
 
       {visibleSocialItems.length > 0 && (
-        <div className="mb-6">
-          <h3 className="text-lg font-medium mb-3">Social Links</h3>
-          <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-3 gap-2">
             {visibleSocialItems.map(({ key, label }) => (
               <a
                 key={key}
                 href={socialLinks[key]}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-full border border-gray-200 px-4 py-2 text-sm text-gray-700 transition-colors hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700"
+                className="inline-flex min-w-0 items-center justify-center gap-1.5 rounded-xl border border-gray-200 px-2.5 py-2 text-xs font-semibold text-gray-700 transition-colors hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700"
               >
-                <ExternalLink size={16} aria-hidden="true" />
-                {label}
+                <ExternalLink size={13} aria-hidden="true" className="shrink-0" />
+                <span className="truncate">{label}</span>
               </a>
             ))}
-          </div>
         </div>
       )}
-
-      {profile?.phone_number && (
-        <div className="mb-6">
-          <h3 className="text-lg font-medium mb-3">Phone</h3>
-          <div className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">
-            <Phone size={16} aria-hidden="true" />
-            {profile.phone_number}
-          </div>
-        </div>
-      )}
-    </>
+    </div>
   );
 };
 

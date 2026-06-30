@@ -1,4 +1,4 @@
-const baseBlockClass = 'animate-pulse rounded bg-current/10';
+const baseBlockClass = 'ui-skeleton';
 
 const SkeletonBlock = ({ className = '' }) => (
   <div
