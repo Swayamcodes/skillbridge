@@ -131,7 +131,8 @@ const GigDetail = () => {
       setShowReviewForm(false);
       setReviewComment('');
       setRating(5);
-      fetchGig();
+      await fetchGig();
+      window.dispatchEvent(new Event('skillbridge:stats-updated'));
     } catch (error) {
       setError(error.response?.data?.message || 'Failed to submit review');
     } finally {

@@ -16,6 +16,8 @@ import ProfileFreelancerFields, { AvailabilityBadge } from '../components/Profil
 import Navbar from '../components/Navbar';
 import api from '../services/api';
 
+const formatReputationScore = (score) => Number(score || 0).toFixed(2);
+
 const PublicProfile = () => {
   const { id } = useParams();
   const [profile, setProfile] = useState(null);
@@ -156,7 +158,7 @@ const PublicProfile = () => {
                   <div className="mb-2 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-800">
                     <Trophy size={16} aria-hidden="true" />
                   </div>
-                  <p className="text-xl font-semibold tracking-tight text-gray-950">{profile?.reputation_score || 0}</p>
+                  <p className="text-xl font-semibold tracking-tight text-gray-950">{formatReputationScore(profile?.reputation_score)}</p>
                   <p className="mt-0.5 text-xs font-medium text-gray-500">Reputation</p>
                 </div>
                 <div className="rounded-xl border border-emerald-900/10 bg-gradient-to-br from-white to-emerald-50/60 p-3.5 shadow-[0_10px_24px_rgba(16,24,40,0.05)]">

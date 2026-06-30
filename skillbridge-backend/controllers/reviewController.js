@@ -1,24 +1,33 @@
 import supabase from '../utils/supabase.js';
+import { updateReputationScore } from '../utils/reputation.js';
 
 export const createReview = async (req, res) => {
   try {
+    const db = req.supabase || supabase;
     const { gigId, rating, comment } = req.body;
     const userId = req.user.id;
+    const traceId = `${gigId}-${Date.now()}`;
 
     // Get reviewer profile
-    const { data: reviewerProfile } = await supabase
+    const { data: reviewerProfile, error: reviewerProfileError } = await db
       .from('profiles')
       .select('id')
       .eq('user_id', userId)
-      .single();
+      .maybeSingle();
+
+    if (reviewerProfileError) throw reviewerProfileError;
+    if (!reviewerProfile) {
+      return res.status(404).json({ success: false, message: 'Reviewer profile not found' });
+    }
 
     // Get gig and transaction
-    const { data: gig } = await supabase
+    const { data: gig, error: gigError } = await db
       .from('gigs')
       .select('*, creator_id, assigned_to')
       .eq('id', gigId)
-      .single();
+      .maybeSingle();
 
+    if (gigError) throw gigError;
     if (!gig) {
       return res.status(404).json({ success: false, message: 'Gig not found' });
     }
@@ -28,13 +37,14 @@ export const createReview = async (req, res) => {
     }
 
     // Get transaction
-    const { data: transaction } = await supabase
+    const { data: transaction, error: transactionError } = await db
       .from('transactions')
       .select('*')
       .eq('gig_id', gigId)
       .eq('status', 'completed')
-      .single();
+      .maybeSingle();
 
+    if (transactionError) throw transactionError;
     if (!transaction) {
       return res.status(404).json({ success: false, message: 'Transaction not found' });
     }
@@ -52,19 +62,20 @@ export const createReview = async (req, res) => {
     }
 
     // Check if already reviewed
-    const { data: existing } = await supabase
+    const { data: existing, error: existingReviewError } = await db
       .from('reviews')
       .select('*')
       .eq('transaction_id', transaction.id)
       .eq('reviewer_id', reviewerProfile.id)
-      .single();
+      .maybeSingle();
 
+    if (existingReviewError) throw existingReviewError;
     if (existing) {
       return res.status(400).json({ success: false, message: 'You have already reviewed this gig' });
     }
 
     // Create review
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('reviews')
       .insert([{
         transaction_id: transaction.id,
@@ -79,10 +90,29 @@ export const createReview = async (req, res) => {
     if (error) throw error;
 
     // Update reviewee's reputation score
-    await updateReputationScore(revieweeId);
+    try {
+      await updateReputationScore(revieweeId, {
+        trace: {
+          trace_id: traceId,
+          source: 'createReview',
+          review_id: data.id,
+          transaction_id: transaction.id
+        }
+      });
+    } catch (reputationError) {
+      console.error('Failed to update reviewee reputation score after review:', {
+        trace_id: traceId,
+        review_id: data.id,
+        reviewee_id: revieweeId,
+        message: reputationError.message,
+        details: reputationError.details,
+        hint: reputationError.hint,
+        code: reputationError.code
+      });
+    }
 
     try {
-      const { data: revieweeProfile, error: revieweeProfileError } = await supabase
+      const { data: revieweeProfile, error: revieweeProfileError } = await db
         .from('profiles')
         .select('user_id')
         .eq('id', revieweeId)
@@ -90,7 +120,7 @@ export const createReview = async (req, res) => {
 
       if (revieweeProfileError) throw revieweeProfileError;
 
-      const { error: notificationError } = await supabase
+      const { error: notificationError } = await db
         .from('notifications')
         .insert([{
           user_id: revieweeProfile.user_id,
@@ -143,37 +173,3 @@ export const getUserReviews = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-
-// Helper function to update reputation score
-async function updateReputationScore(profileId) {
-  try {
-    // Get all reviews for this user
-    const { data: reviews } = await supabase
-      .from('reviews')
-      .select('rating')
-      .eq('reviewee_id', profileId);
-
-    // Get completed gigs count
-    const { data: completedGigs, count } = await supabase
-      .from('transactions')
-      .select('*', { count: 'exact' })
-      .or(`creator_id.eq.${profileId},freelancer_id.eq.${profileId}`)
-      .eq('status', 'completed');
-
-    // Calculate reputation score
-    const avgRating = reviews.length > 0 
-      ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length 
-      : 0;
-
-    const reputationScore = (count * 10) + (avgRating * 20);
-
-    // Update profile
-    await supabase
-      .from('profiles')
-      .update({ reputation_score: reputationScore })
-      .eq('id', profileId);
-
-  } catch (error) {
-    console.error('Error updating reputation:', error);
-  }
-}

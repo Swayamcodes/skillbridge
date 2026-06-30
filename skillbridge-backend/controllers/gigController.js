@@ -3,6 +3,7 @@ import supabase from '../utils/supabase.js';
 import { getPaginationMeta, getPaginationParams } from '../utils/pagination.js';
 import { checkFraudRules } from './fraudController.js';
 import { adjustProfileCredits } from '../utils/credits.js';
+import { updateReputationScore } from '../utils/reputation.js';
 
 const MODERATION_SERVICE_URL = 'http://localhost:5001/api/moderate';
 
@@ -685,6 +686,28 @@ export const completeGig = async (req, res) => {
       transaction_type: transaction.type,
       freelancer_id: transaction.freelancer_id
     });
+
+    for (const profileId of [transaction.creator_id, transaction.freelancer_id]) {
+      try {
+        await updateReputationScore(profileId, {
+          trace: {
+            source: 'completeGig',
+            gig_id: id,
+            transaction_id: transaction.id
+          }
+        });
+      } catch (reputationError) {
+        console.error('Failed to update reputation score after gig completion:', {
+          gig_id: id,
+          transaction_id: transaction.id,
+          profile_id: profileId,
+          message: reputationError.message,
+          details: reputationError.details,
+          hint: reputationError.hint,
+          code: reputationError.code
+        });
+      }
+    }
 
     res.json({ success: true, message: 'Gig completed and payment/credits released' });
   } catch (error) {
