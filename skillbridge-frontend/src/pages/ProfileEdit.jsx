@@ -1,5 +1,23 @@
 import { useState, useEffect, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import {
+  ArrowLeft,
+  BriefcaseBusiness,
+  Camera,
+  CheckCircle2,
+  Clock,
+  GraduationCap,
+  Lightbulb,
+  Link as LinkIcon,
+  Phone,
+  Plus,
+  Save,
+  Share2,
+  Sparkles,
+  Trash2,
+  UserRound,
+  X,
+} from 'lucide-react';
 import { AuthContext } from '../context/auth';
 import Avatar from '../components/Avatar';
 import Navbar from '../components/Navbar';
@@ -191,306 +209,373 @@ const ProfileEdit = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-white">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-gray-600">Loading profile...</p>
+      <div className="flex min-h-screen items-center justify-center bg-[#F7F8F4]">
+        <div className="flex flex-col items-center gap-4 rounded-2xl border border-emerald-900/10 bg-white px-10 py-9 text-center shadow-[0_20px_56px_rgba(16,24,40,0.08)]">
+          <div className="h-12 w-12 rounded-full border-4 border-emerald-700 border-t-transparent animate-spin"></div>
+          <p className="font-medium text-gray-600">Loading profile...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+    <div className="min-h-screen bg-[#F7F8F4]">
       <Navbar />
 
-      <div className="max-w-2xl mx-auto px-6 py-12">
-        {/* Back Button */}
+      <div className="mx-auto max-w-6xl px-4 py-5 sm:px-6 sm:py-7 lg:py-8">
         <Link
           to="/profile"
-          className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors mb-6"
+          className="mb-4 inline-flex items-center gap-2 px-1 py-2 text-sm font-medium text-emerald-700 transition-all hover:translate-x-1 hover:text-emerald-900"
         >
-          ← Back to Profile
+          <ArrowLeft size={16} aria-hidden="true" />
+          Back to Profile
         </Link>
 
-        {/* Form Card */}
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-lg p-8">
-          <div className="mb-8">
-            <h1 className="text-3xl font-light mb-2">Edit Profile</h1>
-            <p className="text-gray-600">Update your information and showcase your skills</p>
-          </div>
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-              <p className="text-red-700 text-sm">{error}</p>
-            </div>
-          )}
-
-          {avatarMessage && (
-            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-6">
-              <p className="text-emerald-700 text-sm">{avatarMessage}</p>
-            </div>
-          )}
-
-          <div className="mb-8 flex flex-col items-center gap-3 border-b border-gray-200 pb-8">
-            <div className="relative">
-              <Avatar
-                profile={{ ...profile, avatar_url: avatarPreview }}
-                size="xl"
-                className="border-4 border-white shadow-lg"
-              />
-              <label className="absolute bottom-2 right-2 cursor-pointer rounded-full bg-emerald-700 px-4 py-2 text-xs font-medium text-white shadow-md transition-colors hover:bg-emerald-800">
-                {uploadingAvatar ? 'Uploading...' : 'Change Photo'}
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleAvatarChange}
-                  disabled={uploadingAvatar}
-                  className="sr-only"
-                />
-              </label>
-            </div>
-            <p className="text-sm text-gray-600">Upload a clear profile photo.</p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Availability */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Availability
-              </label>
-              <select
-                name="availability_status"
-                value={formData.availability_status}
-                onChange={handleChange}
-                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-              >
-                <option value="available">Available</option>
-                <option value="busy">Busy</option>
-                <option value="unavailable">Not Available</option>
-              </select>
-            </div>
-
-            {/* Category */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Category
-              </label>
-              <select
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
-                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-              >
-                <option value="">Select Category</option>
-                {categories.map((category) => (
-                  <option key={category} value={category}>{category}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Skills */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Skills
-              </label>
-              <input
-                type="text"
-                name="skills"
-                value={formData.skills}
-                onChange={handleChange}
-                placeholder="React, Python, UI Design, Content Writing"
-                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-              />
-              <p className="text-xs text-gray-500 mt-1">Separate skills with commas</p>
-            </div>
-
-            {/* Year */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Academic Year
-              </label>
-              <select
-                name="year"
-                value={formData.year}
-                onChange={handleChange}
-                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-              >
-                <option value="">Select Year</option>
-                <option value="1">1st Year</option>
-                <option value="2">2nd Year</option>
-                <option value="3">3rd Year</option>
-                <option value="4">4th Year</option>
-              </select>
-            </div>
-
-            {/* Phone Number */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Phone Number
-              </label>
-              <input
-                type="text"
-                name="phone_number"
-                value={formData.phone_number}
-                onChange={(event) => {
-                  const value = event.target.value.replace(/\D/g, '').slice(0, 15);
-                  setFormData({ ...formData, phone_number: value });
-                }}
-                placeholder="Optional"
-                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-              />
-              <p className="text-xs text-gray-500 mt-1">Only visible to you and people you have active gigs with</p>
-            </div>
-
-            {/* Bio */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Bio
-              </label>
-              <textarea
-                name="bio"
-                value={formData.bio}
-                onChange={handleChange}
-                placeholder="Tell others about yourself, your interests, and what you're working on..."
-                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all resize-none"
-                rows="5"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                A good bio helps others understand your background and expertise
+        <div className="mb-6 overflow-hidden rounded-2xl border border-emerald-900/10 bg-white shadow-[0_20px_56px_rgba(16,24,40,0.08)]">
+          <div className="relative overflow-hidden bg-gradient-to-r from-emerald-700 via-emerald-800 to-emerald-950 px-6 py-8 text-white sm:px-8">
+            <div
+              className="pointer-events-none absolute inset-0 opacity-[0.16]"
+              style={{
+                backgroundImage: `linear-gradient(rgba(255,255,255,0.35) 1px, transparent 1px),
+                                  linear-gradient(90deg, rgba(255,255,255,0.35) 1px, transparent 1px)`,
+                backgroundSize: '64px 64px',
+              }}
+            />
+            <div className="relative max-w-3xl">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-100/80">
+                Profile management
+              </p>
+              <h1 className="text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">Edit your creator profile</h1>
+              <p className="mt-4 max-w-2xl text-base leading-7 text-emerald-50/80">
+                Keep your details polished, current, and ready for every SkillBridge collaboration.
               </p>
             </div>
+          </div>
 
-            {/* Portfolio Links */}
-            <div>
-              <div className="flex items-center justify-between gap-4 mb-3">
-                <label className="block text-sm font-medium text-gray-700">
-                  Portfolio Links
-                </label>
-                <button
-                  type="button"
-                  onClick={addPortfolioLink}
-                  className="text-sm text-emerald-700 hover:text-emerald-800 transition-colors"
-                >
-                  Add Link
-                </button>
+          <div className="p-6 sm:p-8">
+            {error && (
+              <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+                {error}
               </div>
+            )}
 
-              {formData.portfolio_links.length === 0 ? (
-                <div className="border border-dashed border-gray-300 rounded-lg p-4 text-sm text-gray-500">
-                  Add GitHub, Behance, portfolio, or project links.
+            {avatarMessage && (
+              <div className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+                {avatarMessage}
+              </div>
+            )}
+
+            <div className="mb-8 rounded-2xl border border-emerald-900/10 bg-[#F7F8F4] p-5">
+              <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+                <div className="relative w-fit">
+                  <Avatar
+                    profile={{ ...profile, avatar_url: avatarPreview }}
+                    size="xl"
+                    className="border-4 border-white shadow-[0_18px_45px_rgba(16,24,40,0.18)] ring-4 ring-white/70"
+                  />
+                  <label className="absolute bottom-2 right-2 inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl bg-emerald-700 text-white shadow-[0_12px_30px_rgba(6,78,59,0.2)] transition-all hover:-translate-y-0.5 hover:bg-emerald-800">
+                    {uploadingAvatar ? (
+                      <span className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                    ) : (
+                      <Camera size={17} aria-hidden="true" />
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarChange}
+                      disabled={uploadingAvatar}
+                      className="sr-only"
+                    />
+                  </label>
                 </div>
-              ) : (
-                <div className="space-y-3">
-                  {formData.portfolio_links.map((link, index) => (
-                    <div key={index} className="grid grid-cols-1 md:grid-cols-[1fr_1.5fr_auto] gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">Profile photo</p>
+                  <h2 className="mt-1 text-2xl font-semibold tracking-tight text-gray-950">Make a strong first impression</h2>
+                  <p className="mt-2 max-w-xl text-sm leading-6 text-gray-600">
+                    Upload a clear profile photo that helps collaborators recognize you.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <section className="rounded-2xl border border-emerald-900/10 bg-white p-5 shadow-[0_12px_30px_rgba(16,24,40,0.05)] sm:p-6">
+                <div className="mb-5 flex items-center gap-3">
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800">
+                    <UserRound size={19} aria-hidden="true" />
+                  </span>
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">Personal Information</p>
+                    <h2 className="text-xl font-semibold tracking-tight text-gray-950">Core profile details</h2>
+                  </div>
+                </div>
+
+                <div className="grid gap-5 md:grid-cols-2">
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-gray-800">Academic Year</label>
+                    <select
+                      name="year"
+                      value={formData.year}
+                      onChange={handleChange}
+                      className="min-h-12 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-900 transition-all focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-100"
+                    >
+                      <option value="">Select Year</option>
+                      <option value="1">1st Year</option>
+                      <option value="2">2nd Year</option>
+                      <option value="3">3rd Year</option>
+                      <option value="4">4th Year</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-gray-800">Phone Number</label>
+                    <div className="relative">
+                      <Phone size={17} aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                       <input
                         type="text"
-                        value={link.title}
-                        onChange={(event) => handlePortfolioChange(index, 'title', event.target.value)}
-                        placeholder="Title"
-                        className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                        name="phone_number"
+                        value={formData.phone_number}
+                        onChange={(event) => {
+                          const value = event.target.value.replace(/\D/g, '').slice(0, 15);
+                          setFormData({ ...formData, phone_number: value });
+                        }}
+                        placeholder="Optional"
+                        className="min-h-12 w-full rounded-xl border border-gray-300 bg-white py-3 pl-11 pr-4 text-gray-900 transition-all placeholder:text-gray-400 focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-100"
                       />
-                      <input
-                        type="url"
-                        value={link.url}
-                        onChange={(event) => handlePortfolioChange(index, 'url', event.target.value)}
-                        placeholder="https://example.com"
-                        className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removePortfolioLink(index)}
-                        className="border border-gray-300 px-4 py-3 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-                      >
-                        X
-                      </button>
                     </div>
-                  ))}
+                    <p className="mt-2 text-xs text-gray-500">Only visible to you and people you have active gigs with</p>
+                  </div>
                 </div>
-              )}
-            </div>
+              </section>
 
-            {/* Social Links */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                Social Links
-              </label>
-              <div className="space-y-3">
-                <input
-                  type="url"
-                  value={formData.social_links.linkedin}
-                  onChange={(event) => handleSocialChange('linkedin', event.target.value)}
-                  placeholder="LinkedIn URL"
-                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-                />
-                <input
-                  type="url"
-                  value={formData.social_links.github}
-                  onChange={(event) => handleSocialChange('github', event.target.value)}
-                  placeholder="GitHub URL"
-                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-                />
-                <input
-                  type="url"
-                  value={formData.social_links.instagram}
-                  onChange={(event) => handleSocialChange('instagram', event.target.value)}
-                  placeholder="Instagram URL"
-                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-                />
-              </div>
-            </div>
-
-            {/* Submit Buttons */}
-            <div className="flex gap-4 pt-4">
-              <button
-                type="submit"
-                disabled={saving}
-                className="flex-1 bg-emerald-700 text-white rounded-lg py-3 font-medium hover:bg-emerald-800 transition-all hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-              >
-                {saving ? (
-                  <span className="flex items-center justify-center">
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Saving Changes...
+              <section className="rounded-2xl border border-emerald-900/10 bg-white p-5 shadow-[0_12px_30px_rgba(16,24,40,0.05)] sm:p-6">
+                <div className="mb-5 flex items-center gap-3">
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800">
+                    <BriefcaseBusiness size={19} aria-hidden="true" />
                   </span>
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">Professional Information</p>
+                    <h2 className="text-xl font-semibold tracking-tight text-gray-950">How you want to be discovered</h2>
+                  </div>
+                </div>
+
+                <div className="grid gap-5 md:grid-cols-2">
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-gray-800">Category</label>
+                    <select
+                      name="category"
+                      value={formData.category}
+                      onChange={handleChange}
+                      className="min-h-12 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-900 transition-all focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-100"
+                    >
+                      <option value="">Select Category</option>
+                      {categories.map((category) => (
+                        <option key={category} value={category}>{category}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-gray-800">Availability</label>
+                    <select
+                      name="availability_status"
+                      value={formData.availability_status}
+                      onChange={handleChange}
+                      className="min-h-12 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-900 transition-all focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-100"
+                    >
+                      <option value="available">Available</option>
+                      <option value="busy">Busy</option>
+                      <option value="unavailable">Not Available</option>
+                    </select>
+                  </div>
+                </div>
+              </section>
+
+              <section className="rounded-2xl border border-emerald-900/10 bg-white p-5 shadow-[0_12px_30px_rgba(16,24,40,0.05)] sm:p-6">
+                <div className="mb-5 flex items-center gap-3">
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800">
+                    <Sparkles size={19} aria-hidden="true" />
+                  </span>
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">Skills</p>
+                    <h2 className="text-xl font-semibold tracking-tight text-gray-950">What you can help with</h2>
+                  </div>
+                </div>
+
+                <div className="space-y-5">
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-gray-800">Skills</label>
+                    <input
+                      type="text"
+                      name="skills"
+                      value={formData.skills}
+                      onChange={handleChange}
+                      placeholder="React, Python, UI Design, Content Writing"
+                      className="min-h-12 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-900 transition-all placeholder:text-gray-400 focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-100"
+                    />
+                    <p className="mt-2 text-xs text-gray-500">Separate skills with commas</p>
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-gray-800">Bio</label>
+                    <textarea
+                      name="bio"
+                      value={formData.bio}
+                      onChange={handleChange}
+                      placeholder="Tell others about yourself, your interests, and what you're working on..."
+                      className="min-h-36 w-full resize-none rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-900 transition-all placeholder:text-gray-400 focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-100"
+                      rows="5"
+                    />
+                    <p className="mt-2 text-xs text-gray-500">
+                      A good bio helps others understand your background and expertise
+                    </p>
+                  </div>
+                </div>
+              </section>
+
+              <section className="rounded-2xl border border-emerald-900/10 bg-white p-5 shadow-[0_12px_30px_rgba(16,24,40,0.05)] sm:p-6">
+                <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800">
+                      <LinkIcon size={19} aria-hidden="true" />
+                    </span>
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">Portfolio</p>
+                      <h2 className="text-xl font-semibold tracking-tight text-gray-950">Show your work</h2>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={addPortfolioLink}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-700/20 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-800 transition-all hover:-translate-y-0.5 hover:bg-emerald-100"
+                  >
+                    <Plus size={16} aria-hidden="true" />
+                    Add Link
+                  </button>
+                </div>
+
+                {formData.portfolio_links.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-emerald-900/20 bg-emerald-50/50 p-5 text-sm text-gray-600">
+                    Add GitHub, Behance, portfolio, or project links.
+                  </div>
                 ) : (
-                  'Save Changes'
+                  <div className="space-y-3">
+                    {formData.portfolio_links.map((link, index) => (
+                      <div key={index} className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_1.5fr_auto]">
+                        <input
+                          type="text"
+                          value={link.title}
+                          onChange={(event) => handlePortfolioChange(index, 'title', event.target.value)}
+                          placeholder="Title"
+                          className="min-h-12 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-900 transition-all placeholder:text-gray-400 focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-100"
+                        />
+                        <input
+                          type="url"
+                          value={link.url}
+                          onChange={(event) => handlePortfolioChange(index, 'url', event.target.value)}
+                          placeholder="https://example.com"
+                          className="min-h-12 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-900 transition-all placeholder:text-gray-400 focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-100"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removePortfolioLink(index)}
+                          className="inline-flex min-h-12 items-center justify-center rounded-xl border border-gray-300 px-4 py-3 font-semibold text-gray-700 transition-colors hover:bg-gray-50"
+                        >
+                          <Trash2 size={17} aria-hidden="true" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 )}
-              </button>
-              <button
-                type="button"
-                onClick={() => navigate('/profile')}
-                className="px-8 py-3 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
+              </section>
+
+              <section className="rounded-2xl border border-emerald-900/10 bg-white p-5 shadow-[0_12px_30px_rgba(16,24,40,0.05)] sm:p-6">
+                <div className="mb-5 flex items-center gap-3">
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800">
+                    <Share2 size={19} aria-hidden="true" />
+                  </span>
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">Social Links</p>
+                    <h2 className="text-xl font-semibold tracking-tight text-gray-950">Connect your public profiles</h2>
+                  </div>
+                </div>
+
+                <div className="grid gap-3 md:grid-cols-3">
+                  <input
+                    type="url"
+                    value={formData.social_links.linkedin}
+                    onChange={(event) => handleSocialChange('linkedin', event.target.value)}
+                    placeholder="LinkedIn URL"
+                    className="min-h-12 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-900 transition-all placeholder:text-gray-400 focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-100"
+                  />
+                  <input
+                    type="url"
+                    value={formData.social_links.github}
+                    onChange={(event) => handleSocialChange('github', event.target.value)}
+                    placeholder="GitHub URL"
+                    className="min-h-12 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-900 transition-all placeholder:text-gray-400 focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-100"
+                  />
+                  <input
+                    type="url"
+                    value={formData.social_links.instagram}
+                    onChange={(event) => handleSocialChange('instagram', event.target.value)}
+                    placeholder="Instagram URL"
+                    className="min-h-12 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-900 transition-all placeholder:text-gray-400 focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-100"
+                  />
+                </div>
+              </section>
+
+              <div className="flex flex-col justify-between gap-3 pt-2 sm:flex-row">
+                <button
+                  type="button"
+                  onClick={() => navigate('/profile')}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 bg-white px-8 py-3.5 font-semibold text-gray-700 transition-colors hover:bg-gray-50"
+                >
+                  <X size={18} aria-hidden="true" />
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-700 px-8 py-3.5 font-semibold text-white shadow-[0_12px_30px_rgba(6,78,59,0.16)] transition-all hover:-translate-y-0.5 hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
+                >
+                  {saving ? (
+                    <>
+                      <span className="h-5 w-5 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                      Saving Changes...
+                    </>
+                  ) : (
+                    <>
+                      <Save size={18} aria-hidden="true" />
+                      Save Changes
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
 
-        {/* Help Section */}
-        <div className="mt-8 bg-emerald-50 rounded-xl border border-emerald-200 p-6">
-          <h3 className="font-medium text-emerald-900 mb-2 flex items-center gap-2">
-            <span>💡</span> Profile Tips
+        <div className="mt-6 rounded-2xl border border-emerald-900/10 bg-emerald-50/70 p-6 shadow-[0_12px_30px_rgba(16,24,40,0.04)]">
+          <h3 className="mb-3 flex items-center gap-2 font-semibold text-emerald-950">
+            <Lightbulb size={18} aria-hidden="true" />
+            Profile Tips
           </h3>
-          <ul className="space-y-2 text-sm text-emerald-800">
+          <ul className="grid gap-3 text-sm text-emerald-900 sm:grid-cols-2">
             <li className="flex items-start gap-2">
-              <span className="text-emerald-600 mt-0.5">•</span>
+              <CheckCircle2 size={16} aria-hidden="true" className="mt-0.5 shrink-0 text-emerald-700" />
               <span>Add specific skills to help others find you for relevant gigs</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-emerald-600 mt-0.5">•</span>
+              <CheckCircle2 size={16} aria-hidden="true" className="mt-0.5 shrink-0 text-emerald-700" />
               <span>Write a bio that highlights your strengths and interests</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-emerald-600 mt-0.5">•</span>
+              <GraduationCap size={16} aria-hidden="true" className="mt-0.5 shrink-0 text-emerald-700" />
               <span>Keep your year updated to reflect your current academic standing</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-emerald-600 mt-0.5">•</span>
+              <Clock size={16} aria-hidden="true" className="mt-0.5 shrink-0 text-emerald-700" />
               <span>A complete profile builds trust and increases your chances of being hired</span>
             </li>
           </ul>
