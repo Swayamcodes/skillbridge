@@ -1,5 +1,22 @@
 import { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import {
+  AlertCircle,
+  ArrowLeft,
+  CalendarDays,
+  CheckCircle2,
+  Coins,
+  FileText,
+  IndianRupee,
+  MessageCircle,
+  PenLine,
+  Send,
+  Sparkles,
+  Star,
+  Tags,
+  Trash2,
+  Users,
+} from 'lucide-react';
 import { AuthContext } from '../context/auth';
 import Avatar from '../components/Avatar';
 import Navbar from '../components/Navbar';
@@ -124,20 +141,20 @@ const GigDetail = () => {
 
   const getStatusBadge = (status) => {
     const badges = {
-      open: { bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-300', icon: '🟢' },
-      assigned: { bg: 'bg-yellow-100', text: 'text-yellow-800', border: 'border-yellow-300', icon: '⏳' },
-      completed: { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-300', icon: '✓' },
-      closed: { bg: 'bg-gray-100', text: 'text-gray-800', border: 'border-gray-300', icon: '🔒' }
+      open: { bg: 'bg-emerald-50', text: 'text-emerald-800', border: 'border-emerald-700/20', icon: CheckCircle2 },
+      assigned: { bg: 'bg-amber-50', text: 'text-amber-800', border: 'border-amber-300/70', icon: Users },
+      completed: { bg: 'bg-blue-50', text: 'text-blue-800', border: 'border-blue-300/70', icon: CheckCircle2 },
+      closed: { bg: 'bg-gray-100', text: 'text-gray-700', border: 'border-gray-300', icon: AlertCircle }
     };
     return badges[status] || badges.open;
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-white">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-gray-600">Loading gig details...</p>
+      <div className="flex min-h-screen items-center justify-center bg-[#F7F8F4]">
+        <div className="flex flex-col items-center gap-4 rounded-xl border border-emerald-900/10 bg-white px-10 py-8 shadow-[0_16px_38px_rgba(16,24,40,0.06)]">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-emerald-700 border-t-transparent"></div>
+          <p className="text-sm font-medium text-gray-600">Loading gig details...</p>
         </div>
       </div>
     );
@@ -145,18 +162,19 @@ const GigDetail = () => {
 
   if (error && !gig) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-white">
-        <div className="bg-white rounded-xl border border-gray-200 p-12 text-center max-w-md">
-          <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
-            <span className="text-3xl">❌</span>
+      <div className="flex min-h-screen items-center justify-center bg-[#F7F8F4] px-4">
+        <div className="max-w-md rounded-xl border border-emerald-900/10 bg-white p-12 text-center shadow-[0_20px_56px_rgba(16,24,40,0.08)]">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-lg bg-red-50 text-red-700">
+            <AlertCircle size={30} aria-hidden="true" />
           </div>
-          <h2 className="text-2xl font-light mb-2">Gig Not Found</h2>
-          <p className="text-gray-600 mb-6">{error}</p>
+          <h2 className="mb-2 text-2xl font-semibold tracking-tight text-gray-950">Gig Not Found</h2>
+          <p className="mb-6 text-gray-600">{error}</p>
           <Link 
             to="/gigs" 
-            className="inline-block bg-emerald-700 text-white px-6 py-3 rounded-full hover:bg-emerald-800 transition-all hover:scale-105"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-700 px-6 py-3 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(6,78,59,0.16)] transition-all hover:-translate-y-0.5 hover:bg-emerald-800"
           >
-            ← Back to Gigs
+            <ArrowLeft size={16} aria-hidden="true" />
+            Back to Gigs
           </Link>
         </div>
       </div>
@@ -171,68 +189,85 @@ const GigDetail = () => {
     && chatOtherUserId
   );
   const statusBadge = getStatusBadge(gig?.status);
+  const StatusIcon = statusBadge.icon;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+    <div className="min-h-screen bg-[#F7F8F4]">
       <Navbar />
 
-      <div className="max-w-4xl mx-auto px-6 py-12">
+      <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:py-10">
         {/* Back Button */}
         <Link
           to="/gigs"
-          className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors mb-6"
+          className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-gray-600 transition-colors hover:text-emerald-800"
         >
-          ← Back to Gigs
+          <ArrowLeft size={16} aria-hidden="true" />
+          Back to Gigs
         </Link>
 
         {/* Main Content Card */}
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden">
+        <div className="overflow-hidden rounded-xl border border-emerald-900/10 bg-white shadow-[0_20px_56px_rgba(16,24,40,0.08)]">
           {/* Header Section */}
-          <div className="p-8 border-b border-gray-200">
-            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6 mb-6">
+          <div className="border-b border-emerald-900/10 p-6 sm:p-8">
+            <div className="mb-3 flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
               <div className="flex-1">
-                <h1 className="text-3xl font-light mb-3">{gig.title}</h1>
-                <div className="flex flex-wrap items-center gap-2 text-gray-600">
+                <div className="mb-4 flex flex-wrap items-center gap-2">
+                  <span className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold uppercase tracking-wide ${statusBadge.bg} ${statusBadge.text} ${statusBadge.border}`}>
+                    <StatusIcon size={13} aria-hidden="true" />
+                    {gig.status}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-gray-700">
+                    {gig.type === 'paid' ? <IndianRupee size={13} aria-hidden="true" /> : <Coins size={13} aria-hidden="true" />}
+                    {gig.type === 'paid' ? 'Paid' : 'Skill Credits'}
+                  </span>
+                </div>
+                <h1 className="mb-4 text-3xl font-semibold leading-tight tracking-tight text-gray-950 sm:text-4xl">
+                  {gig.title}
+                </h1>
+                <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600">
                   <span>Posted by</span>
                   <Avatar profile={gig.creator} size="sm" className="h-8 w-8 text-sm" />
                   <Link 
                     to={`/profile/${gig.creator?.id}`} 
-                    className="font-medium text-emerald-700 hover:text-emerald-800 transition-colors"
+                    className="font-semibold text-emerald-700 transition-colors hover:text-emerald-900 hover:underline"
                   >
                     {gig.creator?.full_name}
                   </Link>
                   <span>from {gig.creator?.college}</span>
                 </div>
               </div>
-              <div className="flex flex-col gap-3 items-end">
+              <div className="flex flex-col gap-3 md:items-end">
                 {gig.type === 'paid' ? (
-                  <div className="bg-emerald-700 text-white px-6 py-3 rounded-lg font-medium text-xl">
-                    ₹{gig.price}
+                  <div className="inline-flex items-center gap-2 rounded-lg bg-emerald-700 px-6 py-3 text-xl font-semibold text-white shadow-[0_12px_30px_rgba(6,78,59,0.16)]">
+                    <IndianRupee size={20} aria-hidden="true" />
+                    {gig.price}
                   </div>
                 ) : (
-                  <div className="bg-emerald-50 text-emerald-700 border-2 border-emerald-200 px-6 py-3 rounded-lg font-medium text-xl">
+                  <div className="inline-flex items-center gap-2 rounded-lg border border-emerald-700/20 bg-emerald-50 px-6 py-3 text-xl font-semibold text-emerald-800">
+                    <Coins size={20} aria-hidden="true" />
                     {gig.credits} Credits
                   </div>
                 )}
-                <span className={`px-4 py-1.5 rounded-full text-sm font-medium border ${statusBadge.bg} ${statusBadge.text} ${statusBadge.border} inline-flex items-center gap-1.5`}>
-                  <span>{statusBadge.icon}</span>
-                  <span className="uppercase">{gig.status}</span>
+                <span className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-1.5 text-sm font-semibold uppercase tracking-wide ${statusBadge.bg} ${statusBadge.text} ${statusBadge.border}`}>
+                  <StatusIcon size={15} aria-hidden="true" />
+                  {gig.status}
                 </span>
               </div>
             </div>
 
             {/* Creator Notice */}
             {isCreator && (
-              <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-4">
-                <div className="flex items-center justify-between">
+              <div className="mb-4 rounded-xl border border-emerald-700/20 bg-emerald-50 p-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-emerald-700">✨</span>
-                    <p className="font-medium text-emerald-900">This is your gig</p>
+                    <Sparkles size={18} className="text-emerald-700" aria-hidden="true" />
+                    <p className="font-semibold text-emerald-950">This is your gig</p>
                   </div>
                   <Link
                     to={`/gigs/${id}/applicants`}
-                    className="bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm hover:bg-emerald-800 transition-colors"
+                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(6,78,59,0.14)] transition-all hover:-translate-y-0.5 hover:bg-emerald-800"
                   >
+                    <Users size={16} aria-hidden="true" />
                     View Applicants
                   </Link>
                 </div>
@@ -242,8 +277,9 @@ const GigDetail = () => {
                       type="button"
                       onClick={handleDelete}
                       disabled={deleting}
-                      className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
                     >
+                      <Trash2 size={15} aria-hidden="true" />
                       {deleting ? 'Deleting...' : 'Delete Gig'}
                     </button>
                   </div>
@@ -252,20 +288,21 @@ const GigDetail = () => {
             )}
 
             {canChat && (
-              <div className="bg-white border border-gray-200 rounded-lg p-4 mb-4">
+              <div className="mb-4 rounded-xl border border-emerald-900/10 bg-white p-4 shadow-[0_10px_24px_rgba(16,24,40,0.05)]">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <p className="font-medium text-gray-900">Project chat</p>
+                    <p className="font-semibold text-gray-950">Project chat</p>
                     <p className="text-sm text-gray-600">Message the other party about this gig.</p>
                   </div>
                   <button
                     type="button"
                     onClick={() => navigate('/messages', { state: { gigId: id, otherUserId: chatOtherUserId } })}
-                    className="relative inline-flex items-center justify-center rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-800"
+                    className="relative inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(6,78,59,0.14)] transition-all hover:-translate-y-0.5 hover:bg-emerald-800"
                   >
+                    <MessageCircle size={16} aria-hidden="true" />
                     Message
                     {chatUnreadCount > 0 && (
-                      <span className="absolute -right-2 -top-2 min-w-5 rounded-full bg-red-600 px-1.5 py-0.5 text-xs font-medium text-white">
+                      <span className="absolute -right-2 -top-2 min-w-5 rounded-full bg-red-600 px-1.5 py-0.5 text-xs font-semibold text-white">
                         {chatUnreadCount > 9 ? '9+' : chatUnreadCount}
                       </span>
                     )}
@@ -275,21 +312,23 @@ const GigDetail = () => {
             )}
 
             {isCreator && gig.status === 'assigned' && (
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-5">
-                <h2 className="text-lg font-medium mb-2 text-gray-900">
-                  <span>âœ“</span> Complete this Gig
+              <div className="rounded-xl border border-emerald-900/10 bg-gray-50 p-5">
+                <h2 className="mb-2 flex items-center gap-2 text-lg font-semibold text-gray-950">
+                  <CheckCircle2 size={19} className="text-emerald-700" aria-hidden="true" />
+                  Complete this Gig
                 </h2>
-                <p className="text-gray-700 mb-4">
+                <p className="mb-4 text-gray-700">
                   Mark this gig as complete to release{' '}
-                  <span className="font-medium text-emerald-700">
-                    {gig.type === 'paid' ? `₹${gig.price}` : `${gig.credits} credits`}
+                  <span className="font-semibold text-emerald-700">
+                    {gig.type === 'paid' ? `INR ${gig.price}` : `${gig.credits} credits`}
                   </span>{' '}
                   to the freelancer.
                 </p>
                 <button
                   onClick={handleComplete}
-                  className="bg-emerald-700 text-white px-6 py-3 rounded-lg hover:bg-emerald-800 transition-colors font-medium"
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-700 px-6 py-3 font-semibold text-white shadow-[0_12px_30px_rgba(6,78,59,0.16)] transition-all hover:-translate-y-0.5 hover:bg-emerald-800"
                 >
+                  <CheckCircle2 size={18} aria-hidden="true" />
                   Complete & Release Payment
                 </button>
               </div>
@@ -297,23 +336,27 @@ const GigDetail = () => {
           </div>
 
           {/* Description Section */}
-          <div className="p-8 border-b border-gray-200">
-            <h2 className="text-lg font-medium mb-3 flex items-center gap-2">
-              <span>📝</span> Description
+          <div className="border-b border-emerald-900/10 p-6 sm:p-8">
+            <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold text-gray-950">
+              <FileText size={19} className="text-emerald-700" aria-hidden="true" />
+              Description
             </h2>
-            <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{gig.description}</p>
+            <div className="rounded-xl border border-emerald-900/10 bg-gray-50/80 p-5">
+              <p className="whitespace-pre-wrap text-sm leading-7 text-gray-700 sm:text-base">{gig.description}</p>
+            </div>
           </div>
 
           {/* Skills Required */}
-          <div className="p-8 border-b border-gray-200">
-            <h2 className="text-lg font-medium mb-3 flex items-center gap-2">
-              <span>⚡</span> Skills Required
+          <div className="border-b border-emerald-900/10 p-6 sm:p-8">
+            <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold text-gray-950">
+              <Tags size={19} className="text-emerald-700" aria-hidden="true" />
+              Skills Required
             </h2>
             <div className="flex flex-wrap gap-2">
               {gig.skills_required?.map((skill, index) => (
                 <span
                   key={index}
-                  className="bg-emerald-50 text-emerald-700 px-4 py-2 rounded-full text-sm border border-emerald-200"
+                  className="rounded-lg border border-emerald-700/15 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-800"
                 >
                   {skill}
                 </span>
@@ -323,9 +366,10 @@ const GigDetail = () => {
 
           {/* Deadline */}
           {gig.deadline && (
-            <div className="p-8 border-b border-gray-200">
-              <h2 className="text-lg font-medium mb-3 flex items-center gap-2">
-                <span>📅</span> Deadline
+            <div className="border-b border-emerald-900/10 p-6 sm:p-8">
+              <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold text-gray-950">
+                <CalendarDays size={19} className="text-emerald-700" aria-hidden="true" />
+                Deadline
               </h2>
               <p className="text-gray-700">
                 {new Date(gig.deadline).toLocaleDateString('en-US', {
@@ -339,27 +383,28 @@ const GigDetail = () => {
 
           {/* Application Form */}
           {!isCreator && gig.status === 'open' && (
-            <div className="p-8 bg-gray-50">
-              <h2 className="text-lg font-medium mb-4 flex items-center gap-2">
-                <span>✍️</span> Apply for this Gig
+            <div className="bg-gray-50 p-6 sm:p-8">
+              <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-950">
+                <PenLine size={19} className="text-emerald-700" aria-hidden="true" />
+                Apply for this Gig
               </h2>
               
               {error && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-                  <p className="text-red-700 text-sm">{error}</p>
+                <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4">
+                  <p className="text-sm font-medium text-red-700">{error}</p>
                 </div>
               )}
 
               <form onSubmit={handleApply}>
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="mb-2 block text-sm font-semibold text-gray-700">
                     Your Message
                   </label>
                   <textarea
                     value={applicationMessage}
                     onChange={(e) => setApplicationMessage(e.target.value)}
                     placeholder="Explain why you're a good fit for this gig..."
-                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all resize-none"
+                    className="w-full resize-none rounded-xl border border-emerald-900/10 bg-white px-4 py-3 text-gray-950 outline-none transition-all placeholder:text-gray-400 focus:border-emerald-700/40 focus:ring-4 focus:ring-emerald-700/10"
                     rows="5"
                     required
                   />
@@ -367,18 +412,21 @@ const GigDetail = () => {
                 <button
                   type="submit"
                   disabled={applying}
-                  className="w-full bg-emerald-700 text-white rounded-lg py-3 font-medium hover:bg-emerald-800 transition-all hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                  className="w-full rounded-lg bg-emerald-700 py-3 font-semibold text-white shadow-[0_12px_30px_rgba(6,78,59,0.16)] transition-all hover:-translate-y-0.5 hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
                 >
                   {applying ? (
                     <span className="flex items-center justify-center">
-                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <svg className="-ml-1 mr-3 h-5 w-5 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
                       Submitting Application...
                     </span>
                   ) : (
-                    'Submit Application'
+                    <span className="inline-flex items-center justify-center gap-2">
+                      <Send size={17} aria-hidden="true" />
+                      Submit Application
+                    </span>
                   )}
                 </button>
               </form>
@@ -387,29 +435,31 @@ const GigDetail = () => {
 
           {/* Review Section */}
           {gig.status === 'completed' && (isCreator || gig.assigned_to === profile?.id) && (
-            <div className="p-8 bg-yellow-50 border-t border-yellow-200">
-              <h2 className="text-lg font-medium mb-4 flex items-center gap-2">
-                <span>⭐</span> Leave a Review
+            <div className="border-t border-amber-200 bg-amber-50 p-6 sm:p-8">
+              <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-950">
+                <Star size={19} className="text-amber-600" aria-hidden="true" />
+                Leave a Review
               </h2>
               
               {!showReviewForm ? (
                 <button
                   onClick={() => setShowReviewForm(true)}
-                  className="bg-yellow-600 text-white px-6 py-3 rounded-lg hover:bg-yellow-700 transition-colors font-medium"
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-amber-600 px-6 py-3 font-semibold text-white shadow-[0_12px_30px_rgba(180,83,9,0.16)] transition-all hover:-translate-y-0.5 hover:bg-amber-700"
                 >
+                  <PenLine size={17} aria-hidden="true" />
                   Write Review
                 </button>
               ) : (
                 <form onSubmit={handleSubmitReview}>
                   <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Rating</label>
+                    <label className="mb-2 block text-sm font-semibold text-gray-700">Rating</label>
                     <div className="flex gap-2">
                       {[1, 2, 3, 4, 5].map((star) => (
                         <button
                           key={star}
                           type="button"
                           onClick={() => setRating(star)}
-                          className={`text-4xl transition-colors ${star <= rating ? 'text-yellow-500' : 'text-gray-300'} hover:scale-110`}
+                          className={`text-4xl transition-all hover:-translate-y-0.5 ${star <= rating ? 'text-amber-500' : 'text-gray-300'}`}
                         >
                           ★
                         </button>
@@ -418,12 +468,12 @@ const GigDetail = () => {
                   </div>
 
                   <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Comment</label>
+                    <label className="mb-2 block text-sm font-semibold text-gray-700">Comment</label>
                     <textarea
                       value={reviewComment}
                       onChange={(e) => setReviewComment(e.target.value)}
                       placeholder="Share your experience working on this gig..."
-                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all resize-none"
+                      className="w-full resize-none rounded-xl border border-amber-200 bg-white px-4 py-3 text-gray-950 outline-none transition-all placeholder:text-gray-400 focus:border-amber-500/50 focus:ring-4 focus:ring-amber-500/10"
                       rows="4"
                       required
                     />
@@ -433,14 +483,14 @@ const GigDetail = () => {
                     <button
                       type="submit"
                       disabled={submittingReview}
-                      className="bg-yellow-600 text-white px-6 py-3 rounded-lg hover:bg-yellow-700 transition-colors font-medium disabled:opacity-50"
+                      className="rounded-lg bg-amber-600 px-6 py-3 font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-amber-700 disabled:opacity-50 disabled:hover:translate-y-0"
                     >
                       {submittingReview ? 'Submitting...' : 'Submit Review'}
                     </button>
                     <button
                       type="button"
                       onClick={() => setShowReviewForm(false)}
-                      className="border border-gray-300 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                      className="rounded-lg border border-gray-300 bg-white px-6 py-3 font-semibold text-gray-700 transition-all hover:-translate-y-0.5 hover:bg-gray-50"
                     >
                       Cancel
                     </button>

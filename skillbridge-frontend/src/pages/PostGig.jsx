@@ -1,5 +1,17 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import {
+  ArrowLeft,
+  CalendarDays,
+  Coins,
+  FileText,
+  IndianRupee,
+  Lightbulb,
+  PenLine,
+  RefreshCw,
+  Send,
+  Tags,
+} from 'lucide-react';
 import Navbar from '../components/Navbar';
 import api from '../services/api';
 
@@ -57,204 +69,251 @@ const PostGig = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+    <div className="min-h-screen bg-[#F7F8F4]">
       <Navbar />
 
-      <div className="max-w-3xl mx-auto px-6 py-12">
+      <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:py-10">
         {/* Back Button */}
         <Link
           to="/gigs"
-          className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors mb-6"
+          className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-gray-600 transition-colors hover:text-emerald-800"
         >
-          ← Back to Gigs
+          <ArrowLeft size={16} aria-hidden="true" />
+          Back to Gigs
         </Link>
 
         {/* Form Card */}
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-lg p-8">
-          <div className="mb-8">
-            <h1 className="text-3xl font-light mb-2">Post a Gig</h1>
+        <div className="overflow-hidden rounded-xl border border-emerald-900/10 bg-white shadow-[0_20px_56px_rgba(16,24,40,0.08)]">
+          <div className="border-b border-emerald-900/10 bg-white p-6 sm:p-8">
+            <div className="mb-3 inline-flex items-center gap-2 rounded-lg border border-emerald-700/15 bg-emerald-50 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-emerald-800">
+              <PenLine size={13} aria-hidden="true" />
+              Create Opportunity
+            </div>
+            <h1 className="mb-2 text-3xl font-semibold tracking-tight text-gray-950 sm:text-4xl">Post a Gig</h1>
             <p className="text-gray-600">Create a new opportunity for your campus community</p>
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-              <p className="text-red-700 text-sm">{error}</p>
+            <div className="mx-6 mt-6 rounded-xl border border-red-200 bg-red-50 p-4 sm:mx-8">
+              <p className="text-sm font-medium text-red-700">{error}</p>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-0">
             {/* Title */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Title
-              </label>
-              <input
-                type="text"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
-                placeholder="e.g., Need React Developer for Portfolio Site"
-                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-                required
-              />
-            </div>
-
-            {/* Description */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description
-              </label>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                placeholder="Describe what you need help with in detail..."
-                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all resize-none"
-                rows="5"
-                required
-              />
-            </div>
-
-            {/* Type Selection */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                Compensation Type
-              </label>
-              <div className="grid grid-cols-2 gap-4">
-                <label className={`flex items-center justify-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                  formData.type === 'paid' 
-                    ? 'border-emerald-500 bg-emerald-50' 
-                    : 'border-gray-200 bg-white hover:border-gray-300'
-                }`}>
-                  <input
-                    type="radio"
-                    name="type"
-                    value="paid"
-                    checked={formData.type === 'paid'}
-                    onChange={handleChange}
-                    className="w-4 h-4 text-emerald-600"
-                  />
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl">💰</span>
-                    <span className="font-medium">Paid (₹)</span>
-                  </div>
-                </label>
-                <label className={`flex items-center justify-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                  formData.type === 'barter' 
-                    ? 'border-emerald-500 bg-emerald-50' 
-                    : 'border-gray-200 bg-white hover:border-gray-300'
-                }`}>
-                  <input
-                    type="radio"
-                    name="type"
-                    value="barter"
-                    checked={formData.type === 'barter'}
-                    onChange={handleChange}
-                    className="w-4 h-4 text-emerald-600"
-                  />
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl">🔄</span>
-                    <span className="font-medium">Barter (Credits)</span>
-                  </div>
-                </label>
+            <section className="border-b border-emerald-900/10 p-6 sm:p-8">
+              <div className="mb-5">
+                <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-950">
+                  <FileText size={19} className="text-emerald-700" aria-hidden="true" />
+                  Gig Details
+                </h2>
+                <p className="mt-1 text-sm text-gray-600">Describe the work clearly so the right students can respond.</p>
               </div>
-            </div>
 
-            {/* Price/Credits Input */}
-            {formData.type === 'paid' ? (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Price (₹)
-                </label>
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500">₹</span>
+              <div className="space-y-5">
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-gray-700">
+                    Title
+                  </label>
                   <input
-                    type="number"
-                    name="price"
-                    value={formData.price}
+                    type="text"
+                    name="title"
+                    value={formData.title}
                     onChange={handleChange}
-                    placeholder="500"
-                    className="w-full border border-gray-300 rounded-lg pl-8 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                    placeholder="e.g., Need React Developer for Portfolio Site"
+                    className="w-full rounded-xl border border-emerald-900/10 bg-white px-4 py-3 text-gray-950 outline-none transition-all placeholder:text-gray-400 focus:border-emerald-700/40 focus:ring-4 focus:ring-emerald-700/10"
                     required
-                    min="1"
                   />
                 </div>
-                <p className="text-xs text-gray-500 mt-1">Enter the amount you're willing to pay</p>
-              </div>
-            ) : (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Credits
-                </label>
-                <input
-                  type="number"
-                  name="credits"
-                  value={formData.credits}
-                  onChange={handleChange}
-                  placeholder="50"
-                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-                  required
-                  min="1"
-                />
-                <p className="text-xs text-gray-500 mt-1">Enter the credits you're offering for this gig</p>
-              </div>
-            )}
 
-            {/* Skills Required */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Skills Required
-              </label>
-              <input
-                type="text"
-                name="skillsRequired"
-                value={formData.skillsRequired}
-                onChange={handleChange}
-                placeholder="React, JavaScript, CSS, UI Design"
-                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-                required
-              />
-              <p className="text-xs text-gray-500 mt-1">Separate skills with commas</p>
-            </div>
+                {/* Description */}
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-gray-700">
+                    Description
+                  </label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleChange}
+                    placeholder="Describe what you need help with in detail..."
+                    className="w-full resize-none rounded-xl border border-emerald-900/10 bg-white px-4 py-3 text-gray-950 outline-none transition-all placeholder:text-gray-400 focus:border-emerald-700/40 focus:ring-4 focus:ring-emerald-700/10"
+                    rows="5"
+                    required
+                  />
+                </div>
+              </div>
+            </section>
 
-            {/* Deadline */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Deadline <span className="text-gray-400 font-normal">(Optional)</span>
-              </label>
-              <input
-                type="date"
-                name="deadline"
-                value={formData.deadline}
-                onChange={handleChange}
-                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-                min={new Date().toISOString().split('T')[0]}
-              />
-            </div>
+            <section className="border-b border-emerald-900/10 p-6 sm:p-8">
+              <div className="mb-5">
+                <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-950">
+                  <Coins size={19} className="text-emerald-700" aria-hidden="true" />
+                  Compensation
+                </h2>
+                <p className="mt-1 text-sm text-gray-600">Choose how this gig will reward the person who completes it.</p>
+              </div>
+
+              <div className="space-y-5">
+                {/* Type Selection */}
+                <div>
+                  <label className="mb-3 block text-sm font-semibold text-gray-700">
+                    Compensation Type
+                  </label>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <label className={`flex cursor-pointer items-center justify-center gap-3 rounded-xl border p-4 transition-all ${
+                      formData.type === 'paid' 
+                        ? 'border-emerald-700/35 bg-emerald-50 shadow-[0_10px_24px_rgba(6,78,59,0.08)]' 
+                        : 'border-emerald-900/10 bg-white hover:-translate-y-0.5 hover:border-emerald-700/25 hover:bg-emerald-50'
+                    }`}>
+                      <input
+                        type="radio"
+                        name="type"
+                        value="paid"
+                        checked={formData.type === 'paid'}
+                        onChange={handleChange}
+                        className="h-4 w-4 text-emerald-600 focus:ring-emerald-700"
+                      />
+                      <div className="flex items-center gap-2 font-semibold text-gray-800">
+                        <IndianRupee size={18} className="text-emerald-700" aria-hidden="true" />
+                        <span>Paid (INR)</span>
+                      </div>
+                    </label>
+                    <label className={`flex cursor-pointer items-center justify-center gap-3 rounded-xl border p-4 transition-all ${
+                      formData.type === 'barter' 
+                        ? 'border-emerald-700/35 bg-emerald-50 shadow-[0_10px_24px_rgba(6,78,59,0.08)]' 
+                        : 'border-emerald-900/10 bg-white hover:-translate-y-0.5 hover:border-emerald-700/25 hover:bg-emerald-50'
+                    }`}>
+                      <input
+                        type="radio"
+                        name="type"
+                        value="barter"
+                        checked={formData.type === 'barter'}
+                        onChange={handleChange}
+                        className="h-4 w-4 text-emerald-600 focus:ring-emerald-700"
+                      />
+                      <div className="flex items-center gap-2 font-semibold text-gray-800">
+                        <RefreshCw size={18} className="text-emerald-700" aria-hidden="true" />
+                        <span>Barter (Credits)</span>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Price/Credits Input */}
+                {formData.type === 'paid' ? (
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-gray-700">
+                      Price (INR)
+                    </label>
+                    <div className="relative">
+                      <IndianRupee className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={17} aria-hidden="true" />
+                      <input
+                        type="number"
+                        name="price"
+                        value={formData.price}
+                        onChange={handleChange}
+                        placeholder="500"
+                        className="w-full rounded-xl border border-emerald-900/10 bg-white py-3 pl-10 pr-4 text-gray-950 outline-none transition-all placeholder:text-gray-400 focus:border-emerald-700/40 focus:ring-4 focus:ring-emerald-700/10"
+                        required
+                        min="1"
+                      />
+                    </div>
+                    <p className="mt-1.5 text-xs font-medium text-gray-500">Enter the amount you're willing to pay</p>
+                  </div>
+                ) : (
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-gray-700">
+                      Credits
+                    </label>
+                    <input
+                      type="number"
+                      name="credits"
+                      value={formData.credits}
+                      onChange={handleChange}
+                      placeholder="50"
+                      className="w-full rounded-xl border border-emerald-900/10 bg-white px-4 py-3 text-gray-950 outline-none transition-all placeholder:text-gray-400 focus:border-emerald-700/40 focus:ring-4 focus:ring-emerald-700/10"
+                      required
+                      min="1"
+                    />
+                    <p className="mt-1.5 text-xs font-medium text-gray-500">Enter the credits you're offering for this gig</p>
+                  </div>
+                )}
+              </div>
+            </section>
+
+            <section className="border-b border-emerald-900/10 p-6 sm:p-8">
+              <div className="mb-5">
+                <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-950">
+                  <Tags size={19} className="text-emerald-700" aria-hidden="true" />
+                  Requirements
+                </h2>
+                <p className="mt-1 text-sm text-gray-600">Add the skills and timing needed to complete the gig.</p>
+              </div>
+
+              <div className="space-y-5">
+                {/* Skills Required */}
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-gray-700">
+                    Skills Required
+                  </label>
+                  <input
+                    type="text"
+                    name="skillsRequired"
+                    value={formData.skillsRequired}
+                    onChange={handleChange}
+                    placeholder="React, JavaScript, CSS, UI Design"
+                    className="w-full rounded-xl border border-emerald-900/10 bg-white px-4 py-3 text-gray-950 outline-none transition-all placeholder:text-gray-400 focus:border-emerald-700/40 focus:ring-4 focus:ring-emerald-700/10"
+                    required
+                  />
+                  <p className="mt-1.5 text-xs font-medium text-gray-500">Separate skills with commas</p>
+                </div>
+
+                {/* Deadline */}
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-gray-700">
+                    Deadline <span className="font-normal text-gray-400">(Optional)</span>
+                  </label>
+                  <div className="relative">
+                    <CalendarDays className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={17} aria-hidden="true" />
+                    <input
+                      type="date"
+                      name="deadline"
+                      value={formData.deadline}
+                      onChange={handleChange}
+                      className="w-full rounded-xl border border-emerald-900/10 bg-white py-3 pl-10 pr-4 text-gray-950 outline-none transition-all focus:border-emerald-700/40 focus:ring-4 focus:ring-emerald-700/10"
+                      min={new Date().toISOString().split('T')[0]}
+                    />
+                  </div>
+                </div>
+              </div>
+            </section>
 
             {/* Submit Buttons */}
-            <div className="flex gap-4 pt-4">
+            <div className="flex flex-col gap-3 bg-gray-50 p-6 sm:flex-row sm:p-8">
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 bg-emerald-700 text-white rounded-lg py-3 font-medium hover:bg-emerald-800 transition-all hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                className="inline-flex flex-1 items-center justify-center rounded-lg bg-emerald-700 py-3 font-semibold text-white shadow-[0_12px_30px_rgba(6,78,59,0.16)] transition-all hover:-translate-y-0.5 hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
               >
                 {loading ? (
                   <span className="flex items-center justify-center">
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <svg className="-ml-1 mr-3 h-5 w-5 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
                     Posting...
                   </span>
                 ) : (
-                  'Post Gig'
+                  <span className="inline-flex items-center justify-center gap-2">
+                    <Send size={17} aria-hidden="true" />
+                    Post Gig
+                  </span>
                 )}
               </button>
               <button
                 type="button"
                 onClick={() => navigate('/gigs')}
-                className="px-8 py-3 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                className="rounded-lg border border-gray-300 bg-white px-8 py-3 font-semibold text-gray-700 transition-all hover:-translate-y-0.5 hover:bg-gray-50"
               >
                 Cancel
               </button>
@@ -263,23 +322,26 @@ const PostGig = () => {
         </div>
 
         {/* Help Section */}
-        <div className="mt-8 bg-emerald-50 rounded-xl border border-emerald-200 p-6">
-          <h3 className="font-medium text-emerald-900 mb-2">💡 Tips for posting a great gig</h3>
-          <ul className="space-y-2 text-sm text-emerald-800">
+        <div className="mt-8 rounded-xl border border-emerald-700/20 bg-emerald-50 p-6 shadow-[0_12px_30px_rgba(6,78,59,0.06)]">
+          <h3 className="mb-3 flex items-center gap-2 font-semibold text-emerald-950">
+            <Lightbulb size={18} className="text-emerald-700" aria-hidden="true" />
+            Tips for posting a great gig
+          </h3>
+          <ul className="space-y-2 text-sm text-emerald-900">
             <li className="flex items-start gap-2">
-              <span className="text-emerald-600 mt-0.5">•</span>
+              <span className="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-emerald-700"></span>
               <span>Write a clear, specific title that describes what you need</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-emerald-600 mt-0.5">•</span>
+              <span className="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-emerald-700"></span>
               <span>Include all relevant details in the description</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-emerald-600 mt-0.5">•</span>
+              <span className="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-emerald-700"></span>
               <span>List all required skills to attract the right candidates</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-emerald-600 mt-0.5">•</span>
+              <span className="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-emerald-700"></span>
               <span>Set a realistic deadline and fair compensation</span>
             </li>
           </ul>

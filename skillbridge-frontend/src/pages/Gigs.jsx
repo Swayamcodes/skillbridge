@@ -1,5 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import {
+  ArrowLeft,
+  ArrowRight,
+  Coins,
+  IndianRupee,
+  Plus,
+  RefreshCw,
+  Search,
+  SlidersHorizontal,
+  Tags,
+} from 'lucide-react';
 import Avatar from '../components/Avatar';
 import Pagination from '../components/Pagination';
 import { GigCardSkeleton } from '../components/Skeletons';
@@ -117,32 +128,41 @@ const Gigs = () => {
       }
     });
 
+  const typeButtonClass = (type) =>
+    `inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-all ${
+      filter === type
+        ? 'bg-emerald-700 text-white shadow-[0_10px_24px_rgba(6,78,59,0.16)]'
+        : 'border border-emerald-900/10 bg-white text-gray-700 hover:-translate-y-0.5 hover:border-emerald-700/25 hover:bg-emerald-50 hover:text-emerald-800'
+    }`;
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+      <div className="min-h-screen bg-[#F7F8F4]">
         <Navbar
           action={
             <Link
               to="/gigs/post"
-              className="hidden md:inline-block bg-emerald-700 text-white px-5 py-2 rounded-full text-sm hover:bg-emerald-800 transition-all"
+              className="hidden items-center gap-2 rounded-lg bg-emerald-700 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(6,78,59,0.16)] transition-all hover:-translate-y-0.5 hover:bg-emerald-800 md:inline-flex"
             >
-              + Post Gig
+              <Plus size={16} aria-hidden="true" />
+              Post Gig
             </Link>
           }
         />
 
-        <div className="max-w-7xl mx-auto px-6 py-12">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:py-10">
           <div className="mb-8">
-            <Link to="/dashboard" className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors mb-4">
-              â† Back to Dashboard
+            <Link to="/dashboard" className="mb-4 inline-flex items-center gap-2 text-sm font-semibold text-gray-600 transition-colors hover:text-emerald-800">
+              <ArrowLeft size={16} aria-hidden="true" />
+              Back to Dashboard
             </Link>
-            <h1 className="text-4xl font-light mb-2">Browse Opportunities</h1>
+            <h1 className="mb-2 text-4xl font-semibold tracking-tight text-gray-950">Browse Opportunities</h1>
             <p className="text-gray-600">Discover gigs and connect with peers across campus</p>
           </div>
 
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, index) => (
-              <GigCardSkeleton key={index} className="bg-white" />
+              <GigCardSkeleton key={index} className="bg-white shadow-[0_12px_30px_rgba(16,24,40,0.05)]" />
             ))}
           </div>
         </div>
@@ -151,30 +171,32 @@ const Gigs = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+    <div className="min-h-screen bg-[#F7F8F4]">
       <Navbar
         action={
           <Link
             to="/gigs/post"
-            className="hidden md:inline-block bg-emerald-700 text-white px-5 py-2 rounded-full text-sm hover:bg-emerald-800 transition-all"
+            className="hidden items-center gap-2 rounded-lg bg-emerald-700 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(6,78,59,0.16)] transition-all hover:-translate-y-0.5 hover:bg-emerald-800 md:inline-flex"
           >
-            + Post Gig
+            <Plus size={16} aria-hidden="true" />
+            Post Gig
           </Link>
         }
       />
 
-      <div className="max-w-7xl mx-auto px-6 py-12">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:py-10">
         {/* Header */}
         <div className="mb-8">
-          <Link to="/dashboard" className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors mb-4">
-            ← Back to Dashboard
+          <Link to="/dashboard" className="mb-4 inline-flex items-center gap-2 text-sm font-semibold text-gray-600 transition-colors hover:text-emerald-800">
+            <ArrowLeft size={16} aria-hidden="true" />
+            Back to Dashboard
           </Link>
-          <h1 className="text-4xl font-light mb-2">Browse Opportunities</h1>
+          <h1 className="mb-2 text-4xl font-semibold tracking-tight text-gray-950">Browse Opportunities</h1>
           <p className="text-gray-600">Discover gigs and connect with peers across campus</p>
         </div>
 
         {successMessage && (
-          <div className="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+          <div className="mb-6 rounded-xl border border-emerald-700/20 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900 shadow-[0_10px_24px_rgba(6,78,59,0.06)]">
             {successMessage}
           </div>
         )}
@@ -182,63 +204,56 @@ const Gigs = () => {
         {/* Search Bar */}
         <div className="mb-6">
           <div className="relative">
+            <Search className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-emerald-700" size={21} aria-hidden="true" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by title, description, or skills..."
-              className="w-full border border-gray-300 rounded-lg px-5 py-4 pr-12 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-lg"
+              className="w-full rounded-xl border border-emerald-900/10 bg-white px-14 py-4 text-base text-gray-950 shadow-[0_12px_30px_rgba(16,24,40,0.05)] outline-none transition-all placeholder:text-gray-400 focus:border-emerald-700/40 focus:ring-4 focus:ring-emerald-700/10 sm:text-lg"
             />
-            <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-xl">🔍</span>
           </div>
         </div>
 
         {/* Filters Section */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6 mb-8">
+        <div className="mb-8 rounded-xl border border-emerald-900/10 bg-white p-6 shadow-[0_16px_38px_rgba(16,24,40,0.06)]">
           {/* Type Filter */}
           <div className="mb-6">
-            <p className="text-sm font-medium text-gray-700 mb-3">Type</p>
+            <p className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-800">
+              <SlidersHorizontal size={16} className="text-emerald-700" aria-hidden="true" />
+              Type
+            </p>
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => setFilter('all')}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                  filter === 'all' 
-                    ? 'bg-emerald-700 text-white' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                className={typeButtonClass('all')}
               >
                 All Gigs
               </button>
               <button
                 onClick={() => setFilter('paid')}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                  filter === 'paid' 
-                    ? 'bg-emerald-700 text-white' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                className={typeButtonClass('paid')}
               >
-                💰 Paid
+                <IndianRupee size={15} aria-hidden="true" />
+                Paid
               </button>
               <button
                 onClick={() => setFilter('barter')}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                  filter === 'barter' 
-                    ? 'bg-emerald-700 text-white' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                className={typeButtonClass('barter')}
               >
-                🔄 Barter
+                <RefreshCw size={15} aria-hidden="true" />
+                Barter
               </button>
             </div>
           </div>
 
           {/* Sort */}
           <div className="mb-6">
-            <p className="text-sm font-medium text-gray-700 mb-3">Sort by</p>
+            <p className="mb-3 text-sm font-semibold text-gray-800">Sort by</p>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              className="rounded-lg border border-emerald-900/10 bg-white px-4 py-2.5 text-sm font-medium text-gray-800 outline-none transition-all focus:border-emerald-700/40 focus:ring-4 focus:ring-emerald-700/10"
             >
               <option value="newest">Newest First</option>
               <option value="oldest">Oldest First</option>
@@ -250,12 +265,15 @@ const Gigs = () => {
           {/* Skills Filter */}
           {allSkills.length > 0 && (
             <div>
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-sm font-medium text-gray-700">Filter by Skills</p>
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <p className="flex items-center gap-2 text-sm font-semibold text-gray-800">
+                  <Tags size={16} className="text-emerald-700" aria-hidden="true" />
+                  Filter by Skills
+                </p>
                 {selectedSkills.length > 0 && (
                   <button
                     onClick={() => setSelectedSkills([])}
-                    className="text-sm text-emerald-700 hover:text-emerald-800 font-medium"
+                    className="text-sm font-semibold text-emerald-700 transition-colors hover:text-emerald-900"
                   >
                     Clear ({selectedSkills.length})
                   </button>
@@ -266,10 +284,10 @@ const Gigs = () => {
                   <button
                     key={skill}
                     onClick={() => toggleSkill(skill)}
-                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+                    className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition-all ${
                       selectedSkills.includes(skill)
-                        ? 'bg-emerald-700 text-white'
-                        : 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
+                        ? 'bg-emerald-700 text-white shadow-[0_10px_24px_rgba(6,78,59,0.16)]'
+                        : 'border border-emerald-700/15 bg-emerald-50 text-emerald-800 hover:-translate-y-0.5 hover:bg-emerald-100'
                     }`}
                   >
                     {skill}
@@ -281,20 +299,20 @@ const Gigs = () => {
         </div>
 
         {/* Results Count */}
-        <div className="flex items-center justify-between mb-6">
-          <p className="text-gray-600">
-            <span className="font-medium text-gray-900">{filteredAndSortedGigs.length}</span> of {gigs.length} gigs
+        <div className="mb-6 flex items-center justify-between">
+          <p className="text-sm font-medium text-gray-600">
+            <span className="font-semibold text-gray-950">{filteredAndSortedGigs.length}</span> of {gigs.length} gigs
           </p>
         </div>
 
         {/* Gigs Grid */}
         {filteredAndSortedGigs.length === 0 ? (
-          <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-            <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
-              <span className="text-3xl">🔍</span>
+          <div className="rounded-xl border border-dashed border-emerald-900/20 bg-white p-12 text-center shadow-[0_16px_38px_rgba(16,24,40,0.06)]">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-lg bg-emerald-100 text-emerald-800">
+              <Search size={30} aria-hidden="true" />
             </div>
-            <h3 className="text-xl font-light mb-2">No gigs found</h3>
-            <p className="text-gray-600 mb-6">
+            <h3 className="mb-2 text-xl font-semibold text-gray-950">No gigs found</h3>
+            <p className="mb-6 text-gray-600">
               {searchQuery || selectedSkills.length > 0 
                 ? 'Try adjusting your filters'
                 : 'Be the first to post a gig!'
@@ -307,77 +325,81 @@ const Gigs = () => {
                   setSelectedSkills([]);
                   setFilter('all');
                 }}
-                className="bg-emerald-700 text-white px-6 py-3 rounded-full hover:bg-emerald-800 transition-all hover:scale-105"
+                className="inline-flex items-center justify-center rounded-lg bg-emerald-700 px-6 py-3 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(6,78,59,0.16)] transition-all hover:-translate-y-0.5 hover:bg-emerald-800"
               >
                 Clear All Filters
               </button>
             ) : (
               <Link
                 to="/gigs/post"
-                className="inline-block bg-emerald-700 text-white px-6 py-3 rounded-full hover:bg-emerald-800 transition-all hover:scale-105"
+                className="inline-flex items-center justify-center rounded-lg bg-emerald-700 px-6 py-3 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(6,78,59,0.16)] transition-all hover:-translate-y-0.5 hover:bg-emerald-800"
               >
                 Post the First Gig
               </Link>
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {filteredAndSortedGigs.map((gig) => (
               <div
                 key={gig.id}
-                className="bg-white rounded-xl border border-gray-200 p-6 hover:border-emerald-500 hover:shadow-lg transition-all group"
+                className="group flex h-full flex-col rounded-xl border border-emerald-900/10 bg-white p-6 shadow-[0_12px_30px_rgba(16,24,40,0.05)] transition-all hover:-translate-y-1 hover:border-emerald-700/30 hover:shadow-[0_18px_45px_rgba(16,24,40,0.09)]"
               >
-                <div className="flex items-start justify-between mb-3">
+                <div className="mb-4 flex items-start justify-between gap-3">
                   <Link
                     to={`/gigs/${gig.id}`}
-                    className="text-xl font-medium group-hover:text-emerald-700 transition-colors line-clamp-2 flex-1"
+                    className="line-clamp-2 flex-1 text-xl font-semibold leading-snug text-gray-950 transition-colors group-hover:text-emerald-800"
                   >
                     {gig.title}
                   </Link>
                   {gig.type === 'paid' ? (
-                    <span className="bg-emerald-700 text-white px-3 py-1 rounded-full text-sm font-medium flex-shrink-0 ml-2">
-                      ₹{gig.price}
+                    <span className="ml-2 inline-flex flex-shrink-0 items-center gap-1 rounded-lg bg-emerald-700 px-3 py-1.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(6,78,59,0.14)]">
+                      <IndianRupee size={14} aria-hidden="true" />
+                      {gig.price}
                     </span>
                   ) : (
-                    <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full text-sm font-medium flex-shrink-0 ml-2">
+                    <span className="ml-2 inline-flex flex-shrink-0 items-center gap-1 rounded-lg border border-emerald-700/15 bg-emerald-50 px-3 py-1.5 text-sm font-semibold text-emerald-800">
+                      <Coins size={14} aria-hidden="true" />
                       {gig.credits} Credits
                     </span>
                   )}
                 </div>
 
-                <p className="text-gray-600 text-sm mb-4 line-clamp-3 leading-relaxed">
+                <p className="mb-4 line-clamp-3 text-sm leading-6 text-gray-600">
                   {gig.description}
                 </p>
 
                 {gig.skills_required && gig.skills_required.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-4">
+                  <div className="mb-5 flex flex-wrap gap-2">
                     {gig.skills_required.slice(0, 3).map((skill, index) => (
                       <span
                         key={index}
-                        className="bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full text-xs"
+                        className="rounded-md border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-semibold text-gray-700"
                       >
                         {skill}
                       </span>
                     ))}
                     {gig.skills_required.length > 3 && (
-                      <span className="bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full text-xs">
+                      <span className="rounded-md border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-semibold text-gray-700">
                         +{gig.skills_required.length - 3} more
                       </span>
                     )}
                   </div>
                 )}
 
-                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                  <div className="flex items-center gap-2">
-                    <Avatar profile={gig.creator} size="sm" className="w-8 h-8 text-sm" />
+                <div className="mt-auto flex items-center justify-between border-t border-emerald-900/10 pt-4">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <Avatar profile={gig.creator} size="sm" className="h-8 w-8 text-sm" />
                     <Link
                       to={`/profile/${gig.creator?.id}`}
-                      className="text-sm text-gray-600 hover:text-emerald-700 hover:underline"
+                      className="truncate text-sm font-medium text-gray-600 transition-colors hover:text-emerald-800 hover:underline"
                     >
                       {gig.creator?.full_name}
                     </Link>
                   </div>
-                  <span className="text-emerald-700 group-hover:translate-x-1 transition-transform">→</span>
+                  <span className="ml-3 inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-800 transition-all group-hover:translate-x-1 group-hover:bg-emerald-100">
+                    <ArrowRight size={17} aria-hidden="true" />
+                  </span>
                 </div>
               </div>
             ))}
