@@ -6,6 +6,7 @@ import { adjustProfileCredits } from '../utils/credits.js';
 import { updateReputationScore } from '../utils/reputation.js';
 
 const ML_SERVICE_URL = process.env.ML_SERVICE_URL;
+const getAiRequestUrl = (path) => `${(ML_SERVICE_URL || '').replace(/\/+$/, '')}${path}`;
 
 const moderateContent = async (text) => {
   if (!text || !String(text).trim()) {
@@ -13,17 +14,47 @@ const moderateContent = async (text) => {
   }
 
   try {
+    const requestUrl = getAiRequestUrl('/api/moderate');
+    const requestPayload = { text };
+
+    console.log('AI moderation request:', {
+      ML_SERVICE_URL,
+      final_request_url: requestUrl,
+      method: 'POST',
+      timeout_ms: 10000,
+      payload: {
+        text_length: String(text).length
+      }
+    });
+
     const response = await axios.post(
-      `${ML_SERVICE_URL}/api/moderate`,
-      { text },
+      requestUrl,
+      requestPayload,
       { timeout: 10000 }
     );
+
+    console.log('AI moderation response:', {
+      status: response.status,
+      body: response.data
+    });
 
     return {
       is_safe: response.data?.is_safe !== false,
       flagged_words: Array.isArray(response.data?.flagged_words) ? response.data.flagged_words : []
     };
   } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error('AI moderation axios error:', {
+        ML_SERVICE_URL,
+        final_request_url: getAiRequestUrl('/api/moderate'),
+        method: 'POST',
+        code: error.code,
+        message: error.message,
+        response_status: error.response?.status,
+        response_data: error.response?.data
+      });
+    }
+
     console.error('Moderation service unavailable, allowing request:', error.message);
     return { is_safe: true, flagged_words: [] };
   }

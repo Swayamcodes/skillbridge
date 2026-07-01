@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 
 from flask import Flask, jsonify, request
@@ -9,8 +10,21 @@ from matching import recommend_gigs
 from moderation import moderate_text
 
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 app = Flask(__name__)
 CORS(app, origins=os.environ.get("BACKEND_URL", "http://localhost:5000"))
+
+
+@app.before_request
+def log_incoming_request():
+    logger.info(
+        "Incoming request: method=%s path=%s remote_addr=%s",
+        request.method,
+        request.path,
+        request.remote_addr,
+    )
 
 
 @app.route("/health", methods=["GET"])
@@ -21,18 +35,25 @@ def health_check():
 @app.route("/api/ml/recommend", methods=["POST"])
 def recommend():
     try:
+        logger.info("POST /api/ml/recommend reached Flask")
         payload = request.get_json(silent=True)
         if payload is None:
+            logger.warning("POST /api/ml/recommend JSON parse failed")
             return jsonify({"error": "Request body must be valid JSON"}), 400
+        logger.info("POST /api/ml/recommend JSON parsed successfully")
 
         user_skills = payload.get("user_skills", [])
         open_gigs = payload.get("open_gigs", [])
         recommendations = recommend_gigs(user_skills=user_skills, open_gigs=open_gigs)
+        logger.info("POST /api/ml/recommend recommend_gigs executed")
 
+        logger.info("POST /api/ml/recommend response returned successfully")
         return jsonify({"recommendations": recommendations}), 200
     except ValueError as exc:
+        logger.warning("POST /api/ml/recommend validation error: %s", exc)
         return jsonify({"error": str(exc)}), 400
     except Exception as exc:
+        logger.exception("POST /api/ml/recommend failed")
         return jsonify({"error": "Failed to generate recommendations", "details": str(exc)}), 500
 
 

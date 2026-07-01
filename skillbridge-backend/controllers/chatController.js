@@ -3,6 +3,7 @@ import supabase from '../utils/supabase.js';
 
 const ML_SERVICE_URL = process.env.ML_SERVICE_URL;
 const MAX_MESSAGE_LENGTH = 1000;
+const getAiRequestUrl = (path) => `${(ML_SERVICE_URL || '').replace(/\/+$/, '')}${path}`;
 
 const getDb = (req) => req.supabase || supabase;
 
@@ -40,17 +41,47 @@ const getOtherPartyId = (gig, profileId) => {
 
 const moderateMessage = async (content) => {
   try {
+    const requestUrl = getAiRequestUrl('/api/moderate');
+    const requestPayload = { text: content };
+
+    console.log('AI chat moderation request:', {
+      ML_SERVICE_URL,
+      final_request_url: requestUrl,
+      method: 'POST',
+      timeout_ms: 10000,
+      payload: {
+        text_length: String(content).length
+      }
+    });
+
     const response = await axios.post(
-      `${ML_SERVICE_URL}/api/moderate`,
-      { text: content },
+      requestUrl,
+      requestPayload,
       { timeout: 10000 }
     );
+
+    console.log('AI chat moderation response:', {
+      status: response.status,
+      body: response.data
+    });
 
     return {
       is_safe: response.data?.is_safe !== false,
       flagged_words: Array.isArray(response.data?.flagged_words) ? response.data.flagged_words : []
     };
   } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error('AI chat moderation axios error:', {
+        ML_SERVICE_URL,
+        final_request_url: getAiRequestUrl('/api/moderate'),
+        method: 'POST',
+        code: error.code,
+        message: error.message,
+        response_status: error.response?.status,
+        response_data: error.response?.data
+      });
+    }
+
     console.error('Moderation service unavailable, allowing chat message:', error.message);
     return { is_safe: true, flagged_words: [] };
   }
