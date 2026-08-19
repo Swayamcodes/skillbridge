@@ -1,5 +1,19 @@
 # React + Vite
 
+## Realtime Chat Setup
+
+The chat UI uses Supabase Realtime subscriptions on the `messages` table.
+
+Manual Supabase Dashboard step:
+
+1. Open Supabase Dashboard.
+2. Go to Database > Replication.
+3. Enable replication for the `messages` table.
+
+This replication setting must be enabled in the dashboard and cannot be fully configured with SQL alone.
+
+Also apply `../database/messages_rls.sql` so authenticated users can receive realtime events only for messages they are allowed to view.
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:
